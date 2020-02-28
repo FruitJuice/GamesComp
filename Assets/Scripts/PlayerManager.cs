@@ -15,20 +15,10 @@ namespace Com.NUIGalway.CompGame
         [Tooltip("Local Player Instnace. Used to know if the local player is represented in the Scene")]
         public static GameObject localPlayerInstance;
 
-
-        [Tooltip("Prefab to represent the first person view model")]
-        public GameObject fpFab;
-
         #endregion
 
         #region Private Fields
 
-        /*[Tooltip("The Beams GameObject to control")]
-        [SerializeField]
-        private GameObject beams;*/
-
-        //true when the player is firing
-        bool isFiring;
         FPController fpController;
 
 
@@ -48,15 +38,6 @@ namespace Com.NUIGalway.CompGame
 
             //the instance isn't destoryed when loading a new scene through level synchornization, smooth transitions.
             DontDestroyOnLoad(this.gameObject);
-
-           /* if (beams == null)
-            {
-                Debug.LogError("Missing Beams Reference.", this);
-            }
-            else
-            {
-                beams.SetActive(false);
-            }*/
         }
 
         void Start()
@@ -92,23 +73,6 @@ namespace Com.NUIGalway.CompGame
                 }
             }
 
-            /*if (beams != null && isFiring != beams.activeSelf)
-            {
-                beams.SetActive(isFiring);
-            }*/
-        }
-
-        private void OnCollisionEnter(Collision collision)
-        {
-            if (!photonView.IsMine)
-            {
-                return;
-            }
-
-            if(collision.gameObject.tag == "Bullet")
-            {
-                health -= 0.5f;
-            }
         }
 
     
@@ -176,13 +140,10 @@ namespace Com.NUIGalway.CompGame
 
             if (stream.IsWriting)
             {
-                stream.SendNext(isFiring); //We own this instance, send everyone else our firing data
                 stream.SendNext(health);
             }
             else
             {
-                //Receiving everyone elses data on what they're doing
-                this.isFiring = (bool)stream.ReceiveNext();
                 this.health = (float)stream.ReceiveNext();
             }
         }

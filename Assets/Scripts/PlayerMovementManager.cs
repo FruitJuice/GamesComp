@@ -14,22 +14,30 @@ namespace Com.NUIGalway.CompGame
         private Animator fpvAnimator;
         private GameObject fpvModel;
         private CharacterController characterController;
+        private PortalManager portManager;
         private Transform cameraTransform;
 
         [SerializeField]
         private float speed = 6.0f;
 
         [SerializeField]
-        private float gravity = -1.0f;
+        private float gravity = 3f;
+
+        [SerializeField]
+        private float jumpSpeed = 5f;
 
         [Tooltip("Controls how sensitive mouse inputs are")]
         [SerializeField]
         private float mouseSensitivity = 100.0f;
 
-        private Vector3 velocity;
+        private Vector3 move;
+        private float vSpeed = 0f;
 
         float xRotation;
         float yRotation;
+
+        float lastRun = 0.0f;
+        float executeRate = 0.5f;
 
 
         #endregion Private Fields
@@ -42,6 +50,7 @@ namespace Com.NUIGalway.CompGame
             
             animator = GetComponent<Animator>();
             characterController = GetComponent<CharacterController>();
+            portManager = this.transform.Find("arms_assault_rifle_02").gameObject.GetComponent<PortalManager>();
             fpvModel = this.transform.Find("arms_assault_rifle_02").gameObject;
             fpvAnimator = fpvModel.GetComponent<Animator>();
 
@@ -67,12 +76,8 @@ namespace Com.NUIGalway.CompGame
             //deal with jumping
             AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
 
-            //checking if the player is running before allowing to jump
-            if (Input.GetButtonDown("Jump"))
-            {
-                animator.SetTrigger("Jump");
-                //moveDirection = new Vector3(0f, 8f, 0f);
-            }
+
+            
 
             if (!animator)
             {
@@ -96,22 +101,31 @@ namespace Com.NUIGalway.CompGame
             //moveDirection = new Vector3(x, 0.0f, z);
             //moveDirection = Camera.main.transform.TransformDirection(moveDirection);
 
-            Vector3 move = transform.right * x + transform.forward * z;
+            move = ((transform.right * x) + (transform.forward * z)) * speed;
 
             //moveDirection *= speed;
-            
-            //if (!characterController.isGrounded) { 
-            //    moveDirection += Physics.gravity;
-            //}
+            if (characterController.isGrounded)
+            {
+                vSpeed = 0;
+                if (Input.GetButtonDown("Jump"))
+                {
+                    vSpeed = jumpSpeed;
+                    //animator.SetTrigger("Jump");
+                }
 
-            
+            }
 
-            //moveDirection.y -= gravity * Time.deltaTime;
-            characterController.Move(move * speed * Time.deltaTime);
 
-            velocity.y += gravity * Time.deltaTime;
 
-            characterController.Move(velocity * Time.deltaTime);
+
+            vSpeed -= gravity * Time.deltaTime;
+            move.y = vSpeed;
+            //move.y -= gravity * Time.deltaTime;
+            characterController.Move(move * Time.deltaTime);
+
+            //velocity.y += gravity * Time.deltaTime;
+
+
 
 
 
@@ -137,6 +151,22 @@ namespace Com.NUIGalway.CompGame
             //animator.SetFloat("Direction", h, directionDampTime, Time.deltaTime);
         }
 
+        void OnControllerColliderHit(ControllerColliderHit hit)
+        {
+            if (photonView.IsMine)
+            {
+                if(hit.gameObject.tag == "Portal")
+                {
+                    if (Time.time > executeRate + lastRun)
+                    {
+                        lastRun = Time.time;
+                        var collider = hit.gameObject.GetComponent<PortalCollision>();
+                        collider.Teleport(characterController);
+                    }
+                }
+                
+            }
+        }
 
 
         #endregion

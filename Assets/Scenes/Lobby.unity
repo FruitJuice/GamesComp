@@ -98,7 +98,7 @@ LightmapSettings:
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 0}
-  m_UseShadowmask: 1
+  m_UseShadowmask: 0
 --- !u!196 &4
 NavMeshSettings:
   serializedVersion: 2
@@ -159,8 +159,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 657.13367, y: -432.4884}
-  m_SizeDelta: {x: 1344.3955, y: 680}
+  m_AnchoredPosition: {x: 606.1459, y: -364.94794}
+  m_SizeDelta: {x: 612.29175, y: 529.8959}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &5072532
 MonoBehaviour:
@@ -349,7 +349,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 635862868}
-        m_MethodName: OnLeaveGameButtonClicked
+        m_MethodName: OnLeaveRoomButtonClicked
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -679,7 +679,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 425, y: 10}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &365440210
@@ -1154,7 +1154,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -446, y: -282}
+  m_AnchoredPosition: {x: 0, y: -282}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &584816719
@@ -1403,6 +1403,7 @@ GameObject:
   - component: {fileID: 635862865}
   - component: {fileID: 635862864}
   - component: {fileID: 635862868}
+  - component: {fileID: 635862869}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -1517,9 +1518,23 @@ MonoBehaviour:
   RoomListPanel: {fileID: 220490694}
   RoomListContent: {fileID: 943720671}
   RoomListEntryPrefab: {fileID: 114706, guid: f29aa449902c75d4f86a5a1df1683784, type: 3}
+  InsideRoomPanel: {fileID: 965772940}
   StartGameButton: {fileID: 2046437430}
-  PlayerListEntryPrefab: {fileID: 195212, guid: a3e91b7022184a846a58b5312ae07183,
+  PlayerListEntryPrefab: {fileID: 7587370964836834256, guid: 061a818ec3fbc6f43bc90d6a083fc973,
     type: 3}
+--- !u!114 &635862869
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 635862863}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b28dd60f6abf16d4094cf0f642a043e2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dontDestroyOnLoad: 0
 --- !u!1 &665786791
 GameObject:
   m_ObjectHideFlags: 0
@@ -2714,7 +2729,6 @@ GameObject:
   - component: {fileID: 1437667175}
   - component: {fileID: 1437667174}
   - component: {fileID: 1437667173}
-  - component: {fileID: 1437667176}
   m_Layer: 5
   m_Name: NameInputField
   m_TagString: Untagged
@@ -2798,18 +2812,7 @@ MonoBehaviour:
       m_Calls: []
   m_OnValueChanged:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1437667176}
-        m_MethodName: SetPlayerName
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
   m_CaretColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
   m_CustomCaretColor: 0
   m_SelectionColor: {r: 0.65882355, g: 0.80784315, b: 1, a: 0.7529412}
@@ -2853,18 +2856,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1437667171}
   m_CullTransparentMesh: 0
---- !u!114 &1437667176
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1437667171}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b48e119dabeb3ab49bc1b67306633c8b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1442241368
 GameObject:
   m_ObjectHideFlags: 0

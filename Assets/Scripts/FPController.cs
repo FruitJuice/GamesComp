@@ -121,19 +121,45 @@ namespace Com.NUIGalway.CompGame
             {
 
                 Fire();
-                //var bullet = PhotonNetwork.Instantiate(Prefabs.bulletPrefab.name, Spawnpoints.bulletSpawnPoint.transform.position, Spawnpoints.bulletSpawnPoint.rotation,0); //spawning it for all players
 
-                //bullet.GetComponent<Rigidbody>().velocity = bullet.transform.up * 1;
             }
 
             if (Input.GetKeyDown(KeyCode.G))
             {
 
                 Grenade();
-                //var bullet = PhotonNetwork.Instantiate(Prefabs.bulletPrefab.name, Spawnpoints.bulletSpawnPoint.transform.position, Spawnpoints.bulletSpawnPoint.rotation,0); //spawning it for all players
 
-                //bullet.GetComponent<Rigidbody>().velocity = bullet.transform.up * 1;
             }
+
+
+            if (Input.GetKeyDown(KeyCode.O))
+            {
+                RaycastHit hit = new RaycastHit();
+                
+                if (Physics.Raycast(Spawnpoints.bulletSpawnPoint.transform.position, Spawnpoints.bulletSpawnPoint.transform.up, out hit))
+                {
+                    if (hit.transform.CompareTag("PortalPlace"))
+                    {
+                        gameObject.GetComponent<PhotonView>().RPC("ShootPortal1", RpcTarget.All, hit.point + (hit.transform.forward*0.01f), hit.transform.rotation);
+                    }
+                }
+
+            }
+
+            if (Input.GetKeyDown(KeyCode.I))
+            {
+                RaycastHit hit = new RaycastHit();
+
+                if (Physics.Raycast(Spawnpoints.bulletSpawnPoint.transform.position, Spawnpoints.bulletSpawnPoint.transform.up, out hit))
+                {
+                    if (hit.transform.CompareTag("PortalPlace"))
+                    {
+                        gameObject.GetComponent<PhotonView>().RPC("ShootPortal2", RpcTarget.All, hit.point + (hit.transform.forward*0.01f), hit.transform.rotation);
+                    }
+                }
+
+            }
+
         }
 
         #region Private Methods

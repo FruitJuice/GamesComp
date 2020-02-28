@@ -1,5 +1,6 @@
 ﻿using Com.NUIGalway.CompGame;
 using Photon.Pun;
+using Photon.Pun.UtilityScripts;
 using Photon.Realtime;
 using System.Collections;
 using System.Collections.Generic;
@@ -18,29 +19,17 @@ namespace Com.NUIGalaway.CompGame
         [Tooltip("Prefab to represent the player")]
         public GameObject playerFab;
 
-        #endregion
-
-        #region Private Methods
-
-        void LoadArena()
-        {
-            if (!PhotonNetwork.IsMasterClient)
-            {
-                Debug.Log("PhotonNetwork: Tried to load a level but is not master Client");
-            }
-            Debug.LogFormat("PhotonNetwork: Loading Level : {0}", PhotonNetwork.CurrentRoom.PlayerCount);
-            Destroy(Camera.main.gameObject);
-            PhotonNetwork.LoadLevel("Level " + SceneManagerHelper.ActiveSceneBuildIndex);
-        }
+        [Tooltip("Player Spawn Points")]
+        public Vector3[] spawnpoints;
 
         #endregion
 
         #region MonoBehaviourPunCallbacks Callbacks
         //When a user leaves the room, calls this Photon method that we override to execute code
         public override void OnLeftRoom()
-            {
-                SceneManager.LoadScene(0);
-            }
+        {
+            SceneManager.LoadScene(0);
+        }
 
         public override void OnPlayerEnteredRoom(Player newPlayer)
         {
@@ -50,7 +39,7 @@ namespace Com.NUIGalaway.CompGame
             {
                 Debug.LogFormat("OnPlayerEnteredRoom IsMasterCleint {0}", PhotonNetwork.IsMasterClient);
 
-                LoadArena();
+                //LoadArena();
             }
 
         }
@@ -62,10 +51,21 @@ namespace Com.NUIGalaway.CompGame
             if (PhotonNetwork.IsMasterClient)
             {
                 Debug.LogFormat("OnPlayerLeftRoom IsMasterClient {0}", PhotonNetwork.IsMasterClient);
-
-                LoadArena();
+                //LoadArena();
             }
 
+        }
+
+        public override void OnEnable()
+        {
+            base.OnEnable();
+            PlayerNumbering.OnPlayerNumberingChanged += OnPlayerNumberingChanged;
+        }
+
+        public override void OnDisable()
+        {
+            base.OnEnable();
+            PlayerNumbering.OnPlayerNumberingChanged -= OnPlayerNumberingChanged;
         }
 
         #endregion
@@ -86,7 +86,7 @@ namespace Com.NUIGalaway.CompGame
             {
                 Debug.LogFormat("Instantiating local player from {0}", SceneManager.GetActiveScene().name);
                 //Inside a room, create a character for the local player. Gets synced by using the PhotonNetwork Instantiate.
-                PhotonNetwork.Instantiate(this.playerFab.name, new Vector3(0f, 5f, 0f), Quaternion.identity, 0);
+                PhotonNetwork.Instantiate(this.playerFab.name, spawnpoints[0], Quaternion.identity, 0);
             }
             else
             {
@@ -96,6 +96,8 @@ namespace Com.NUIGalaway.CompGame
 
         #endregion
 
+
+
         #region Public Methods
 
         public void LeaveRoom()
@@ -104,5 +106,10 @@ namespace Com.NUIGalaway.CompGame
         }
 
         #endregion
+
+        private void OnPlayerNumberingChanged()
+        {
+            Debug.Log("ON Player Numbering changed");
+        }
     }
 }

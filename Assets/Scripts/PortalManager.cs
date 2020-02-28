@@ -1,93 +1,215 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using Photon.Pun;
+using Photon.Pun.UtilityScripts;
+using System.Collections;
 using UnityEngine;
 
-public class PortalManager : MonoBehaviour
+namespace Com.NUIGalway.CompGame
 {
-    #region Public Variables
-    public GameObject portal1;
-    public GameObject portal2;
-
-    public GameObject portalCam;
-
-    #endregion
-
-    #region Private Variables;
-
-    public GameObject port1Cam;
-    public GameObject port2Cam;
-
-    Transform cameraTransform;
-    RenderTexture camTexture1;
-    RenderTexture camTexture2;
-
-
-
-    #endregion
-
-    // Start is called before the first frame update
-    void Start()
+    public class PortalManager : MonoBehaviour
     {
-        cameraTransform = Camera.main.transform;
-        CreateRenderTexture();
-        
-        
-    }
+        #region Public Variables
+        public GameObject portal;
 
-    // Update is called once per frame
-    void Update()
-    {
+        public Shader PortalBorder;
+        public Texture noiseTexture;
+        public Texture empty;
 
-        float angle = Mathf.Atan2(portal1.transform.position.x - cameraTransform.position.x, portal1.transform.position.z - cameraTransform.position.z) * 180 / Mathf.PI;
-        //float angle2 = Mathf.Atan2(portal1.transform.position.x - cameraTransform.position.x, portal1.transform.position.y - cameraTransform.position.y) * 180 / Mathf.PI;
-        //print(angle);
-        port2Cam.transform.rotation = Quaternion.Euler(0, angle, 0);
+        #endregion
 
-        port2Cam.transform.rotation = cameraTransform.rotation;
+        #region Private Variables;
 
-        //float distance = Vector3.Distance(cameraTransform.position, portal1.transform.position);
+        private GameObject portal1;
+        private GameObject portal2;
 
-        Vector3 distance = cameraTransform.position - portal1.transform.position;
-        port2Cam.transform.position = portal2.transform.position + distance;
+        private Camera port1Cam;
+        private Camera port2Cam;
+        private RenderTexture camTexture1;
+        private RenderTexture camTexture2;
+        public Material borderMat1;
+        public Material borderMat2;
+        private Color color1;
+        private Color color2;
 
-        //port2Cam.transform.position.x = distance;
-        //print(distance);
-        //port2Cam.transform.position = new Vector3(distance + portal2.transform.position.x, port2Cam.transform.position.y, port2Cam.transform.position.z);
 
-        //Vector3 topRight = portal2.GetComponent<Renderer>().bounds.max;
-        //Vector3 topLeft = portal2.GetComponent<Renderer>().bounds.max;
-        //topLeft.z = portal2.GetComponent<Renderer>().bounds.min.z;
 
-        //Vector3 bottomLeft = portal2.GetComponent<Renderer>().bounds.min;
-        //Vector3 bottomRight = portal2.GetComponent<Renderer>().bounds.min;
-        //bottomRight.z = portal1.GetComponent<Renderer>().bounds.max.z;
 
-        //uvs = port1Mesh.uv;
-        //for (var i = 0; i < uvs.Length; i++)
-        //{
-        //    uvs[0] = port2Cam.GetComponent<Camera>().WorldToViewportPoint(bottomLeft);
-        //    uvs[1] = port2Cam.GetComponent<Camera>().WorldToViewportPoint(topLeft);
-        //    uvs[2] = port2Cam.GetComponent<Camera>().WorldToViewportPoint(topRight);
-        //    uvs[3] = port2Cam.GetComponent<Camera>().WorldToViewportPoint(bottomRight);
-        //    port1Mesh.uv = uvs;
-        //}
+        private Transform cameraTransform;
+        private Camera cameraMain;
 
-        //print(uvs[0]);
 
-    }
+        #endregion
 
-    void CreateRenderTexture()
-    {
-        if(camTexture2 != null)
+        // Start is called before the first frame update
+        void Start()
         {
-            camTexture2.Release();
+            cameraTransform = Camera.main.transform;
+            cameraMain = cameraTransform.GetComponent<Camera>();
+            color1 = ClipperGate.GetColor(GetComponentInParent<PhotonView>().Owner.GetPlayerNumber());
+            color2 = ClipperGate.GetColor2(GetComponentInParent<PhotonView>().Owner.GetPlayerNumber());
         }
-        camTexture2 = new RenderTexture(Screen.width, Screen.height, 24);
-        //camTexture2.depthBuffer
-        port2Cam.GetComponent<Camera>().targetTexture = camTexture2;
-        port2Cam.GetComponent<Camera>().Render();
-        portal1.GetComponent<Renderer>().material.SetTexture("_MainTex", camTexture2);
 
+
+        void Update()
+        {
+
+            if (portal1 != null && portal2 != null)
+            {
+                PortalUpdate(portal1.transform, portal2.transform, port2Cam);
+                PortalUpdate(portal2.transform, portal1.transform, port1Cam);
+                
+            }
+
+        }
+
+        void PortalUpdate(Transform mainPortal, Transform otherPortal, Camera otherCam)
+        {
+            float horizontalDiff = Vector3.Angle(mainPortal.right, cameraTransform.forward);
+            float verticalDiff = Vector3.Angle(cameraTransform.forward, mainPortal.up);
+
+
+            otherCam.transform.localEulerAngles = new Vector3(verticalDiff - 90, horizontalDiff - 90, 0);
+
+
+            Vector3 distance = cameraTransform.position - mainPortal.position;
+
+            var heading = cameraTransform.position - mainPortal.position;
+            heading.y = 0;
+            var distance2 = heading.magnitude;
+            var direction = heading / distance2;
+
+            float angleY = Vector3.SignedAngle(mainPortal.forward.normalized, direction, mainPortal.up.normalized);
+
+            float angleUnknown = 180 - 90 - angleY;
+
+            float horiDistance = (distance2 / Mathf.Sin(90 * Mathf.Deg2Rad)) * Mathf.Sin(angleY * Mathf.Deg2Rad);
+            float vertiDistance = (distance2 / Mathf.Sin(90 * Mathf.Deg2Rad)) * Mathf.Sin(angleUnknown * Mathf.Deg2Rad);
+
+
+
+
+           otherCam.transform.localPosition = new Vector3(horiDistance * -1, distance.y, (vertiDistance - 1f) * -1);
+
+
+
+            Vector4 clipPlaneWorldSpace =
+                    new Vector4(
+                        otherPortal.forward.x,
+                        otherPortal.forward.y-1f,
+                        otherPortal.forward.z,
+                        Vector3.Dot(otherPortal.position, -otherPortal.forward));
+
+            Vector4 clipPlaneCameraSpace = Matrix4x4.Transpose(Matrix4x4.Inverse(otherCam.worldToCameraMatrix)) * clipPlaneWorldSpace;
+
+
+            otherCam.projectionMatrix = cameraMain.CalculateObliqueMatrix(clipPlaneCameraSpace);
+        }
+
+        void CreateRenderTexture(RenderTexture portalRender, Camera sourceCam, GameObject target, Color borderColor)
+        {
+            if (portalRender != null)
+            {
+                portalRender.Release();
+            }
+            portalRender = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGBHalf);
+            portalRender.useMipMap = true;
+            portalRender.filterMode = FilterMode.Trilinear;
+            sourceCam.GetComponent<Camera>().targetTexture = portalRender;
+            var temp = target.GetComponent<Renderer>().materials;
+            temp[0].SetColor("_MainColor", borderColor);
+            temp[1].SetColor("_MainColor", borderColor);
+            temp[2].SetTexture("_MainTex", portalRender);           
+
+        }
+
+        #region Public Methods
+
+        public void HandleCollision(GameObject portal, CharacterController character)
+        {
+            if (portal1 != null && portal2 != null)
+            {
+                if(portal.GetInstanceID() == portal1.GetInstanceID())
+                {
+
+                    character.enabled = false;
+
+                    float ang = Vector3.Angle(portal1.transform.right, cameraTransform.forward) - 90;
+
+                    //if (ang > 0) ang -= 90;
+                    //else if (ang < 0) ang += 90;
+
+                    Vector3 charV = portal2.transform.rotation.eulerAngles;
+                    character.transform.rotation = Quaternion.Euler(0f,charV.y + ang,0f);
+
+                    character.transform.position = portal2.transform.position + new Vector3(0f, -1.05f, 0f) + (portal2.transform.forward * 0.5f);
+                    character.enabled = true;
+
+
+                }
+                else if(portal.GetInstanceID() == portal2.GetInstanceID())
+                {
+
+                    character.enabled = false;
+
+
+                    float ang = Vector3.Angle(portal2.transform.right, cameraTransform.forward) - 90;
+
+                    //if (ang > 0) ang -= 90;
+                    //else if (ang < 0) ang += 90;
+
+                    Vector3 charV = portal1.transform.rotation.eulerAngles;
+                    character.transform.rotation = Quaternion.Euler(0f, charV.y + ang, 0f);
+
+                    character.transform.position = portal1.transform.position + new Vector3(0f, -1.05f, 0f) + (portal1.transform.forward * 0.5f);
+
+                    character.enabled = true;
+                }
+            }
+        }
+
+        #endregion
+
+
+
+        #region RPC
+
+        [PunRPC]
+        private void ShootPortal1(Vector3 spawnPoint, Quaternion rotAngle)
+        {
+            if(portal1 != null)
+            {
+                Destroy(portal1);
+                camTexture1 = null;
+            }
+            portal1 = Instantiate(portal, spawnPoint, rotAngle);
+            portal1.GetComponent<PortalCollision>().Initialise(this);
+            port1Cam = portal1.GetComponentInChildren<Camera>();
+            CreateRenderTexture(camTexture2, port2Cam, portal1, color1);
+            CreateRenderTexture(camTexture1, port1Cam, portal2, color2);
+        }
+
+        [PunRPC]
+        private void ShootPortal2(Vector3 spawnPoint, Quaternion rotAngle)
+        {
+            if (portal2 != null)
+            {
+                Destroy(portal2);
+                camTexture2 = null;
+            }
+            portal2 = Instantiate(portal, spawnPoint, rotAngle);
+            portal2.GetComponent<PortalCollision>().Initialise(this);
+            port2Cam = portal2.GetComponentInChildren<Camera>();
+            CreateRenderTexture(camTexture1, port1Cam, portal2, color2);
+            CreateRenderTexture(camTexture2, port2Cam, portal1, color1);
+        }
+
+        #endregion
+
+        private void OnDisable()
+        {
+            Destroy(portal1);
+            Destroy(portal2);
+        }
     }
-
 }
+
+

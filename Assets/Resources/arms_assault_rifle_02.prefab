@@ -1782,6 +1782,7 @@ GameObject:
   - component: {fileID: 8851132461307813066}
   - component: {fileID: 8851132461316879142}
   - component: {fileID: 4560730405804360666}
+  - component: {fileID: 4645010705457994896}
   m_Layer: 0
   m_Name: arms_assault_rifle_02
   m_TagString: Untagged
@@ -1837,9 +1838,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 44a8d77391df9c74cb0057aeb8134d47, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  audio: {fileID: 0}
+  damage: 0.5
   Prefabs:
-    bulletPrefab: {fileID: 1079779283560710, guid: 00e59d6264b845d4ab86c04120aca80a,
-      type: 3}
     casingPrefab: {fileID: 1206868768926276, guid: 0c1be510a5f00b449ae006461270ac32,
       type: 3}
     grenadePrefab: {fileID: 1948591290861370, guid: 7b04fe350ed10a741a1e245447860d9e,
@@ -1850,6 +1851,24 @@ MonoBehaviour:
     grenadeSpawnPoint: {fileID: 219774821}
     bulletSpawnPointMinRotation: -5
     bulletSpawnPointMaxRottion: 5
+--- !u!114 &4645010705457994896
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8851132461307511018}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d71149c9e339ea94fae2894a1a6e08da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  PortalRender: {fileID: 0}
+  PortalBorder: {fileID: 0}
+  noiseTexture: {fileID: 0}
+  empty: {fileID: 0}
+  color: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &8851132461307511020
 GameObject:
   m_ObjectHideFlags: 0

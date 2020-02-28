@@ -5,6 +5,14 @@ TagManager:
   serializedVersion: 2
   tags:
   - Bullet
+  - Metal
+  - Target
+  - Wood (Static)
+  - Dirt (Static)
+  - PortalPlace
+  - Portal
+  - PlayableCharacter
+  - GunModel
   layers:
   - Default
   - TransparentFX
@@ -14,8 +22,8 @@ TagManager:
   - UI
   - 
   - 
-  - 
-  - 
+  - ThirdPersonView
+  - FirstPersonView
   - 
   - 
   - 
