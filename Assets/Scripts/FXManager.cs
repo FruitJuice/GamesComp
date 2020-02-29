@@ -13,7 +13,6 @@ namespace Com.NUIGalway.CompGame
             [Header("Prefabs")]
             public GameObject playerImpact;
             public GameObject otherImpact;
-            public ParticleSystem muzzleParticles;
         }
         public prefabs Prefabs;
 
@@ -40,7 +39,7 @@ namespace Com.NUIGalway.CompGame
 
             var emitParams = new ParticleSystem.EmitParams();
             emitParams.position = origin;
-            Prefabs.muzzleParticles.Emit(emitParams, 1);
+            //Prefabs.muzzleParticles.Emit(emitParams, 1);
         }
 
         [PunRPC]
@@ -53,7 +52,7 @@ namespace Com.NUIGalway.CompGame
 
             var emitParams = new ParticleSystem.EmitParams();
             emitParams.position = origin;
-            Prefabs.muzzleParticles.Emit(emitParams, 1);
+            //Prefabs.muzzleParticles.Emit(emitParams, 1);
         }
     }
 }

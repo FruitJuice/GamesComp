@@ -14,7 +14,7 @@ namespace Com.NUIGalway.CompGame
             parentScript = portalManager;
         }
 
-        public void Teleport(CharacterController character)
+        public void Teleport(Transform character)
         {
 
             parentScript.HandleCollision(this.gameObject, character);            

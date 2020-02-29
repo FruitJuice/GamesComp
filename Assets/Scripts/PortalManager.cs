@@ -8,11 +8,8 @@ namespace Com.NUIGalway.CompGame
     public class PortalManager : MonoBehaviour
     {
         #region Public Variables
-        public GameObject portal;
 
-        public Shader PortalBorder;
-        public Texture noiseTexture;
-        public Texture empty;
+        public GameObject portal;
 
         #endregion
 
@@ -25,12 +22,12 @@ namespace Com.NUIGalway.CompGame
         private Camera port2Cam;
         private RenderTexture camTexture1;
         private RenderTexture camTexture2;
-        public Material borderMat1;
-        public Material borderMat2;
         private Color color1;
         private Color color2;
 
-
+        private GameObject collidedPortal;
+        private Transform player;
+        private bool proccessCollision = false;
 
 
         private Transform cameraTransform;
@@ -39,6 +36,8 @@ namespace Com.NUIGalway.CompGame
 
         #endregion
 
+
+        #region Monobehaviour Callbacks
         // Start is called before the first frame update
         void Start()
         {
@@ -60,6 +59,47 @@ namespace Com.NUIGalway.CompGame
             }
 
         }
+
+        void FixedUpdate()
+        {
+            if (proccessCollision)
+            {
+                if (portal1 != null && portal2 != null)
+                {
+                    if (collidedPortal.GetInstanceID() == portal1.GetInstanceID())
+                    {
+                        float ang = Vector3.Angle(portal1.transform.right, cameraTransform.forward) - 90;
+
+                        //if (ang > 0) ang -= 90;
+                        //else if (ang < 0) ang += 90;
+
+                        Vector3 charV = portal2.transform.rotation.eulerAngles;
+                        player.rotation = Quaternion.Euler(0f, charV.y + ang, 0f);
+
+                        player.position = portal2.transform.position + (portal2.transform.forward * 0.10f);
+
+                    }
+                    else if (collidedPortal.GetInstanceID() == portal2.GetInstanceID())
+                    {
+
+                        float ang = Vector3.Angle(portal2.transform.right, cameraTransform.forward) - 90;
+
+                        //if (ang > 0) ang -= 90;
+                        //else if (ang < 0) ang += 90;
+
+                        Vector3 charV = portal1.transform.rotation.eulerAngles;
+                        player.rotation = Quaternion.Euler(0f, charV.y + ang, 0f);
+
+
+                        player.position = portal1.transform.position + (portal1.transform.forward * 0.10f);     
+
+                    }
+                }
+                proccessCollision = false;
+            }
+        }
+
+        #endregion
 
         void PortalUpdate(Transform mainPortal, Transform otherPortal, Camera otherCam)
         {
@@ -87,14 +127,14 @@ namespace Com.NUIGalway.CompGame
 
 
 
-           otherCam.transform.localPosition = new Vector3(horiDistance * -1, distance.y, (vertiDistance - 1f) * -1);
+           otherCam.transform.localPosition = new Vector3(horiDistance * -1, distance.y, (vertiDistance - 0.6f) * -1);
 
 
 
             Vector4 clipPlaneWorldSpace =
                     new Vector4(
                         otherPortal.forward.x,
-                        otherPortal.forward.y-1f,
+                        otherPortal.forward.y-0.15f,
                         otherPortal.forward.z,
                         Vector3.Dot(otherPortal.position, -otherPortal.forward));
 
@@ -123,47 +163,57 @@ namespace Com.NUIGalway.CompGame
 
         #region Public Methods
 
-        public void HandleCollision(GameObject portal, CharacterController character)
+        public void HandleCollision(GameObject portal, Transform character)
         {
-            if (portal1 != null && portal2 != null)
+            collidedPortal = portal;
+            player = character;
+            proccessCollision = true;
+        }
+
+        public bool CheckOwnership(GameObject myPortal)
+        {
+            if (myPortal == portal1 || myPortal == portal2)
             {
-                if(portal.GetInstanceID() == portal1.GetInstanceID())
-                {
-
-                    character.enabled = false;
-
-                    float ang = Vector3.Angle(portal1.transform.right, cameraTransform.forward) - 90;
-
-                    //if (ang > 0) ang -= 90;
-                    //else if (ang < 0) ang += 90;
-
-                    Vector3 charV = portal2.transform.rotation.eulerAngles;
-                    character.transform.rotation = Quaternion.Euler(0f,charV.y + ang,0f);
-
-                    character.transform.position = portal2.transform.position + new Vector3(0f, -1.05f, 0f) + (portal2.transform.forward * 0.5f);
-                    character.enabled = true;
-
-
-                }
-                else if(portal.GetInstanceID() == portal2.GetInstanceID())
-                {
-
-                    character.enabled = false;
-
-
-                    float ang = Vector3.Angle(portal2.transform.right, cameraTransform.forward) - 90;
-
-                    //if (ang > 0) ang -= 90;
-                    //else if (ang < 0) ang += 90;
-
-                    Vector3 charV = portal1.transform.rotation.eulerAngles;
-                    character.transform.rotation = Quaternion.Euler(0f, charV.y + ang, 0f);
-
-                    character.transform.position = portal1.transform.position + new Vector3(0f, -1.05f, 0f) + (portal1.transform.forward * 0.5f);
-
-                    character.enabled = true;
-                }
+                return true;
             }
+            return false;
+        }
+
+        public Ray ShootThroughPortal(GameObject myPortal, Vector3 hitPoint, Vector3 directionForward)
+        {
+            GameObject tempPortalHit = null;
+            GameObject tempPortalOpposite = null;
+
+            if(myPortal == portal1)
+            {
+                tempPortalHit = portal1;
+                tempPortalOpposite = portal2;
+
+            } else if(myPortal == portal2)
+            {
+                tempPortalHit = portal2;
+                tempPortalOpposite = portal1;
+            }
+            
+            if(tempPortalHit != null)
+            {
+                Vector3 localDirection = tempPortalHit.transform.InverseTransformDirection(directionForward);
+                localDirection.z *= -1;
+                localDirection.x *= -1;
+                Vector3 transformedDirection = tempPortalOpposite.transform.TransformDirection(localDirection);
+
+                Vector3 localPosition = tempPortalHit.transform.InverseTransformPoint(hitPoint);
+                localPosition.x *= -1;
+                Vector3 rayPosition = tempPortalOpposite.transform.TransformPoint(localPosition);
+
+                Debug.DrawRay(rayPosition, transformedDirection, Color.green, 4);
+
+                Ray ray = new Ray(rayPosition, transformedDirection);
+
+                return ray;
+            }
+
+            return new Ray();
         }
 
         #endregion

@@ -8,8 +8,6 @@ namespace Com.NUIGalway.CompGame
     {
         #region Public Fields
 
-        public AudioSource audio;
-
         [Tooltip("Damage per bullet")]
         public float damage = 0.5f;
 
@@ -18,14 +16,12 @@ namespace Com.NUIGalway.CompGame
         #region Private 
 
         private float grenadeSpawnDelay = 0.56f;
-        private FXManager fxManager;
-
-
+        
+       
         Animator animator;
         Animator parentAnimator;
-        Transform cameraTransform;
-
-        bool isActive; //reconnect if target lost or camera changed
+        PhotonView fxManager;
+        PortalManager portalManager;
 
         #endregion
 
@@ -35,7 +31,10 @@ namespace Com.NUIGalway.CompGame
         void Start()
         {
             animator = GetComponent<Animator>();
-            parentAnimator = gameObject.GetComponentInParent<Animator>();
+            parentAnimator = transform.GetComponentInParent<Animator>();
+            fxManager = GameObject.Find("FXManager").GetComponent<PhotonView>();
+            portalManager = GetComponent<PortalManager>();
+
         }
 
         // Update is called once per frame
@@ -49,7 +48,7 @@ namespace Com.NUIGalway.CompGame
         {
             if(fxManager == null)
             {
-                fxManager = GameObject.Find("FXManager").GetComponent<FXManager>(); 
+                fxManager = GameObject.Find("FXManager").GetComponent<PhotonView>(); 
             }
         }
 
@@ -82,22 +81,6 @@ namespace Com.NUIGalway.CompGame
         }
         public spawnpoints Spawnpoints;
 
-        //public void OnStartFPView(GameObject givenParent)
-        //{
-        //    parent = givenParent;
-
-        //    parent.transform.GetChild(0).gameObject.SetActive(false);
-        //    parent.transform.GetChild(1).gameObject.SetActive(false);
-
-        //    cameraTransform = Camera.main.transform;
-        //    cameraTransform.SetParent(this.gameObject.transform);
-        //    cameraTransform.position = this.gameObject.transform.position + new Vector3(0f, 0.0869f, 0f);
-        //    cameraTransform.rotation = this.gameObject.transform.rotation;
-
-        //    Cursor.lockState = CursorLockMode.Locked;
-
-        //}
-
         #endregion
 
         
@@ -123,6 +106,14 @@ namespace Com.NUIGalway.CompGame
                 Fire();
 
             }
+            if (Input.GetButton("Fire2"))
+            {
+                animator.SetBool("Aim", true);
+            }
+            else
+            {
+                animator.SetBool("Aim", false);
+            }
 
             if (Input.GetKeyDown(KeyCode.G))
             {
@@ -136,11 +127,11 @@ namespace Com.NUIGalway.CompGame
             {
                 RaycastHit hit = new RaycastHit();
                 
-                if (Physics.Raycast(Spawnpoints.bulletSpawnPoint.transform.position, Spawnpoints.bulletSpawnPoint.transform.up, out hit))
+                if (Physics.Raycast(Spawnpoints.bulletSpawnPoint.transform.position, Spawnpoints.bulletSpawnPoint.transform.forward, out hit))
                 {
                     if (hit.transform.CompareTag("PortalPlace"))
                     {
-                        gameObject.GetComponent<PhotonView>().RPC("ShootPortal1", RpcTarget.All, hit.point + (hit.transform.forward*0.01f), hit.transform.rotation);
+                        gameObject.GetComponent<PhotonView>().RPC("ShootPortal1", RpcTarget.All, hit.point + (hit.transform.forward*0.01f) - hit.transform.up.normalized, hit.transform.rotation);
                     }
                 }
 
@@ -150,11 +141,11 @@ namespace Com.NUIGalway.CompGame
             {
                 RaycastHit hit = new RaycastHit();
 
-                if (Physics.Raycast(Spawnpoints.bulletSpawnPoint.transform.position, Spawnpoints.bulletSpawnPoint.transform.up, out hit))
+                if (Physics.Raycast(Spawnpoints.bulletSpawnPoint.transform.position, Spawnpoints.bulletSpawnPoint.transform.forward, out hit))
                 {
                     if (hit.transform.CompareTag("PortalPlace"))
                     {
-                        gameObject.GetComponent<PhotonView>().RPC("ShootPortal2", RpcTarget.All, hit.point + (hit.transform.forward*0.01f), hit.transform.rotation);
+                        gameObject.GetComponent<PhotonView>().RPC("ShootPortal2", RpcTarget.All, hit.point + (hit.transform.forward*0.01f) - hit.transform.up.normalized, hit.transform.rotation);
                     }
                 }
 
@@ -167,23 +158,49 @@ namespace Com.NUIGalway.CompGame
         private void Fire()
         {
 
-            audio.Play();
             animator.Play("Fire", 0);
+            //print(parentAnimator.GetLayerIndex("Additive Layer"));
+            parentAnimator.Play("Fire", parentAnimator.GetLayerIndex("Additive Layer"));
 
-            //Ray bullet = new Ray(Spawnpoints.bulletSpawnPoint.transform.position, Spawnpoints.bulletSpawnPoint.transform.forward);
-            RaycastHit hit = new RaycastHit();
+
+            Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f,0.5f));
+            RaycastHit hit;
             
             
-            if(Physics.Raycast(Spawnpoints.bulletSpawnPoint.transform.position, Spawnpoints.bulletSpawnPoint.transform.up, out hit))
+            if(Physics.Raycast(ray, out hit))
             {
                 if(hit.transform.CompareTag("Player"))
                 {
                     hit.transform.GetComponent<PhotonView>().RPC("TakeDamage", RpcTarget.All, damage);
-                    fxManager.GetComponent<PhotonView>().RPC("ShotPlayer", RpcTarget.All, Spawnpoints.bulletSpawnPoint.transform.position, hit.point);
+                    fxManager.RPC("ShotPlayer", RpcTarget.All, Spawnpoints.bulletSpawnPoint.transform.position, hit.point);
+                }
+                else if(hit.transform.CompareTag("Portal"))
+                {
+                    if (portalManager.CheckOwnership(hit.collider.transform.parent.gameObject))
+                    {
+                        //fxManager.RPC("ShootNoCollision", RpcTarget.All, Spawnpoints.bulletSpawnPoint.transform.position, hit.point);
+                        Debug.DrawRay(ray.origin, ray.direction, Color.green, 4);
+
+                        Ray shootThroughPortalRay = portalManager.ShootThroughPortal(hit.collider.transform.parent.gameObject, hit.point, ray.direction);
+                        if(Physics.Raycast(shootThroughPortalRay, out hit))
+                        {
+                            Debug.DrawRay(shootThroughPortalRay.origin, shootThroughPortalRay.direction, Color.green, 4);
+                            if (hit.transform.CompareTag("Player") && hit.transform != this.transform)
+                            {
+                                hit.transform.GetComponent<PhotonView>().RPC("TakeDamage", RpcTarget.All, damage);
+                                fxManager.RPC("ShotPlayer", RpcTarget.All, shootThroughPortalRay.origin, hit.point);
+                            }
+                            else
+                            {
+                                fxManager.RPC("ShotOther", RpcTarget.All, shootThroughPortalRay.origin, hit.point);
+                            }
+                        }
+                        
+                    }
                 }
                 else
                 {
-                    fxManager.GetComponent<PhotonView>().RPC("ShotOther", RpcTarget.All, Spawnpoints.bulletSpawnPoint.transform.position, hit.point);
+                    fxManager.RPC("ShotOther", RpcTarget.All, Spawnpoints.bulletSpawnPoint.transform.position, hit.point);
                 }
             }
 
@@ -204,7 +221,7 @@ namespace Com.NUIGalway.CompGame
         private void ThrowGrenade()
         {
             StartCoroutine(GrenadeDelay());
-            parentAnimator.Play("Grenade_Throw", 1, 0f);
+            parentAnimator.Play("Grenade_Throw", parentAnimator.GetLayerIndex("Additive Layer"));
             animator.Play("GrenadeThrow", 0);
         }
 
@@ -218,13 +235,7 @@ namespace Com.NUIGalway.CompGame
             yield return new WaitForSeconds(grenadeSpawnDelay);
 
             grenade = Instantiate(Prefabs.grenadePrefab, Spawnpoints.grenadeSpawnPoint.transform.position, Spawnpoints.grenadeSpawnPoint.rotation);
-            grenade.GetComponent<Rigidbody>().velocity = grenade.transform.forward * 10f;
-
-            //Wait for set amount of time before spawning grenade
-            //Spawn grenade prefab at spawnpoint
-            //Instantiate(grenadePrefab,
-               // grenadeSpawnpoint.transform.position,
-                //grenadeSpawnpoint.transform.rotation);
+            grenade.GetComponent<Rigidbody>().velocity = grenade.transform.forward * 5f;
         }
 
         #endregion

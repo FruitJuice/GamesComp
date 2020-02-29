@@ -42,5 +42,7 @@ MonoBehaviour:
   - SpawnPortal
   - ShootPortal1
   - ShootPortal2
+  - StartRunning
+  - StopRunning
   DisableAutoOpenWizard: 1
   ShowSettings: 0

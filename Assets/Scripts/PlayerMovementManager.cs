@@ -14,8 +14,8 @@ namespace Com.NUIGalway.CompGame
         private Animator fpvAnimator;
         private GameObject fpvModel;
         private CharacterController characterController;
-        private PortalManager portManager;
         private Transform cameraTransform;
+        private AudioSource mainAudio;
 
         [SerializeField]
         private float speed = 6.0f;
@@ -29,6 +29,9 @@ namespace Com.NUIGalway.CompGame
         [Tooltip("Controls how sensitive mouse inputs are")]
         [SerializeField]
         private float mouseSensitivity = 100.0f;
+
+        [SerializeField]
+        private AudioClip runningSound;
 
         private Vector3 move;
         private float vSpeed = 0f;
@@ -50,8 +53,12 @@ namespace Com.NUIGalway.CompGame
             
             animator = GetComponent<Animator>();
             characterController = GetComponent<CharacterController>();
-            portManager = this.transform.Find("arms_assault_rifle_02").gameObject.GetComponent<PortalManager>();
-            fpvModel = this.transform.Find("arms_assault_rifle_02").gameObject;
+            mainAudio = GetComponent<AudioSource>();
+            
+            //audio.clip = runningSound;
+            //audio.loop = true;
+
+            fpvModel = transform.Find("arms_assault_rifle_01").gameObject;
             fpvAnimator = fpvModel.GetComponent<Animator>();
 
         }
@@ -77,33 +84,29 @@ namespace Com.NUIGalway.CompGame
             AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
 
 
-            
-
-            if (!animator)
-            {
-                return;
-            }
-
             float x = Input.GetAxis("Horizontal");
             float z = Input.GetAxis("Vertical");
-
-            if (x != 0 || z != 0)
-            {
-                fpvAnimator.SetBool("Walk", true);
-            } else fpvAnimator.SetBool("Walk", false);
-
-
 
             animator.SetFloat("Horizontal", x);
             animator.SetFloat("Vertical", z);
 
+            if (x != 0 || z != 0)
+            {
+                fpvAnimator.SetBool("Walk", true);
+                if (!mainAudio.isPlaying)
+                {
+                    //photonView.RPC("StartRunning", RpcTarget.All);
+                }
+            }
+            else
+            {
+                fpvAnimator.SetBool("Walk", false);
+                if (mainAudio.isPlaying)
+                {
+                    //photonView.RPC("StopRunning", RpcTarget.All);
+                }
+            }
 
-            //moveDirection = new Vector3(x, 0.0f, z);
-            //moveDirection = Camera.main.transform.TransformDirection(moveDirection);
-
-            move = ((transform.right * x) + (transform.forward * z)) * speed;
-
-            //moveDirection *= speed;
             if (characterController.isGrounded)
             {
                 vSpeed = 0;
@@ -115,19 +118,12 @@ namespace Com.NUIGalway.CompGame
 
             }
 
-
-
-
             vSpeed -= gravity * Time.deltaTime;
+
+
+            move = (transform.right * x + transform.forward * z) * speed;
             move.y = vSpeed;
-            //move.y -= gravity * Time.deltaTime;
             characterController.Move(move * Time.deltaTime);
-
-            //velocity.y += gravity * Time.deltaTime;
-
-
-
-
 
             float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
             float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
@@ -139,16 +135,7 @@ namespace Com.NUIGalway.CompGame
 
 
             fpvModel.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-            //cameraTransform.rotation = Quaternion.Euler(xRotation, yRotation, 0f);
             this.gameObject.transform.Rotate(Vector3.up * mouseX);
-
-
-            //fpvModel.transform.Rotate(Vector3.up * mouseX);
-
-            //cameraTransform.transform.position = transform.position + new Vector3(0f, 1.3f, 0f);
-
-
-            //animator.SetFloat("Direction", h, directionDampTime, Time.deltaTime);
         }
 
         void OnControllerColliderHit(ControllerColliderHit hit)
@@ -160,8 +147,8 @@ namespace Com.NUIGalway.CompGame
                     if (Time.time > executeRate + lastRun)
                     {
                         lastRun = Time.time;
-                        var collider = hit.gameObject.GetComponent<PortalCollision>();
-                        collider.Teleport(characterController);
+                        var collider = hit.gameObject.GetComponentInParent<PortalCollision>();
+                        collider.Teleport(this.gameObject.transform);
                     }
                 }
                 
@@ -169,8 +156,27 @@ namespace Com.NUIGalway.CompGame
         }
 
 
+        public void SpeedReset()
+        {
+            vSpeed = 0f;
+        }
+
         #endregion
 
+
+        #region RPC
+        [PunRPC]
+        private void StartRunning()
+        {
+            mainAudio.Play();
+        }
+
+        [PunRPC]
+        private void StopRunning()
+        {
+            mainAudio.Pause();
+        }
+        #endregion
 
     }
 }

@@ -105,7 +105,7 @@ namespace Com.NUIGalway.CompGame
                 }
             }
 
-            Renderer[] fpvMesh = this.transform.Find("arms_assault_rifle_02").gameObject.GetComponentsInChildren<Renderer>();
+            Renderer[] fpvMesh = this.transform.Find("arms_assault_rifle_01").gameObject.GetComponentsInChildren<Renderer>();
             foreach (Renderer r in fpvMesh)
             {
                 if (!photonView.IsMine)
@@ -116,7 +116,7 @@ namespace Com.NUIGalway.CompGame
 
             if (photonView.IsMine)
             {
-                fpController = this.transform.Find("arms_assault_rifle_02").gameObject.GetComponent<FPController>();
+                fpController = this.transform.Find("arms_assault_rifle_01").gameObject.GetComponent<FPController>();
             }
 
         }
