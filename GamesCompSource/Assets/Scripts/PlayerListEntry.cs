@@ -36,7 +36,7 @@ namespace Com.NUIGalway.CompGame
             }
             else
             {
-                Hashtable initialProps = new Hashtable() { { ClipperGate.PLAYER_READY, isPlayerReady }, { ClipperGate.PLAYER_HEALTH, ClipperGate.PLAYER_MAX_HEALTH }, { ClipperGate.CHOSEN_CHARACTER, ClipperGate.GetCharacter(0) } };
+                Hashtable initialProps = new Hashtable() { { ClipperGate.PLAYER_READY, isPlayerReady }, { ClipperGate.PLAYER_HEALTH, ClipperGate.PLAYER_MAX_HEALTH }, { ClipperGate.CHOSEN_CHARACTER, ClipperGate.GetCharacter(0) }, { ClipperGate.PLAYER_SCORE, ClipperGate.PLAYER_START_SCORE} };
                 PhotonNetwork.LocalPlayer.SetCustomProperties(initialProps);
                 PhotonNetwork.LocalPlayer.SetScore(0);
 

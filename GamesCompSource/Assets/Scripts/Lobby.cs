@@ -120,13 +120,6 @@ namespace Com.NUIGalway.CompGame
             }
 
             StartGameButton.gameObject.SetActive(CheckPlayersReady());
-
-
-            Hashtable props = new Hashtable
-            {
-                {ClipperGate.PLAYER_LOADED_LEVEL, false}
-            };
-            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
         }
 
         public override void OnLeftRoom()

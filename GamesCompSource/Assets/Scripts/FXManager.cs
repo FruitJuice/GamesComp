@@ -11,6 +11,7 @@ namespace Com.NUIGalway.CompGame
         public class prefabs
         {
             [Header("Prefabs")]
+            public GameObject bulletPrefab;
             public GameObject playerImpact;
             public GameObject otherImpact;
         }
@@ -28,14 +29,17 @@ namespace Com.NUIGalway.CompGame
 
         }
 
+
         [PunRPC]
         private void ShotPlayer(Vector3 origin, Vector3 hitPoint)
-        {
-            Transform temp = Prefabs.playerImpact.transform;
-            temp.transform.position = hitPoint;
-            
-            var temp2 = Instantiate(Prefabs.playerImpact, temp.transform.position, temp.transform.rotation);
-            temp2.transform.LookAt(origin);
+        {            
+            var ParticleEffect = Instantiate(Prefabs.playerImpact, hitPoint, Prefabs.playerImpact.transform.rotation);
+            ParticleEffect.transform.LookAt(origin);
+
+            Vector3 dir = (hitPoint - origin).normalized;
+            var BulletEffect = Instantiate(Prefabs.bulletPrefab, origin, Quaternion.identity);
+            BulletEffect.GetComponent<Rigidbody>().velocity = dir * 200;
+
 
             var emitParams = new ParticleSystem.EmitParams();
             emitParams.position = origin;
@@ -45,10 +49,24 @@ namespace Com.NUIGalway.CompGame
         [PunRPC]
         private void ShotOther(Vector3 origin, Vector3 hitPoint)
         {
-            Transform temp = Prefabs.otherImpact.transform;
-            temp.transform.position = hitPoint;
-            var temp2 = Instantiate(Prefabs.otherImpact, temp.transform.position, temp.transform.rotation);
-            temp2.transform.LookAt(origin);
+            var ParticleEffect = Instantiate(Prefabs.otherImpact, hitPoint, Prefabs.otherImpact.transform.rotation);
+            ParticleEffect.transform.LookAt(origin);
+
+            Vector3 dir = (hitPoint - origin).normalized;
+            var BulletEffect = Instantiate(Prefabs.bulletPrefab, origin, Quaternion.identity);
+            BulletEffect.GetComponent<Rigidbody>().velocity = dir * 200;
+
+            var emitParams = new ParticleSystem.EmitParams();
+            emitParams.position = origin;
+            //Prefabs.muzzleParticles.Emit(emitParams, 1);
+        }
+
+        [PunRPC]
+        private void ShootNoCollision(Vector3 origin, Vector3 hitPoint)
+        {
+            Vector3 dir = (hitPoint - origin).normalized;
+            var BulletEffect = Instantiate(Prefabs.bulletPrefab, origin, Quaternion.identity);
+            BulletEffect.GetComponent<Rigidbody>().velocity = dir * 200;
 
             var emitParams = new ParticleSystem.EmitParams();
             emitParams.position = origin;

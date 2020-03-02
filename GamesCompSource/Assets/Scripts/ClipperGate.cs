@@ -4,13 +4,14 @@ namespace Com.NUIGalway.CompGame
 {
     public class ClipperGate
     {
-        public const float PLAYER_RESPAWN_TIME = 4.0f;
-        public const float PLAYER_MAX_HEALTH = 3f;
+        public const float PLAYER_RESPAWN_TIME = 10.0f;
+        public const float PLAYER_MAX_HEALTH = 100f;
+        public const float PLAYER_START_SCORE = 0.0f;
 
         public const string PLAYER_HEALTH = "PlayerHealth";
         public const string PLAYER_READY = "IsPlayerReady";
-        public const string PLAYER_LOADED_LEVEL = "PlayerLoadedLevel";
         public const string CHOSEN_CHARACTER = "SelectedCharacter";
+        public const string PLAYER_SCORE = "PlayerScore";
 
         public static Color GetColor(int colorChoice)
         {

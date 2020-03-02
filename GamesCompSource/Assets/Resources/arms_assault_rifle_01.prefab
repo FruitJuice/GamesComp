@@ -6149,18 +6149,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 44a8d77391df9c74cb0057aeb8134d47, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damage: 0.5
-  Prefabs:
-    casingPrefab: {fileID: 5054107204007116070, guid: 8e7add0227c30e0489cbf6cad3352542,
-      type: 3}
-    grenadePrefab: {fileID: 218893753449918732, guid: b3d3c08597373264eb4712612c37f22a,
-      type: 3}
-  Spawnpoints:
-    casingSpawnPoint: {fileID: 8000764842643823537}
-    bulletSpawnPoint: {fileID: 8004682513381504755}
-    grenadeSpawnPoint: {fileID: 8005073743861058569}
-    bulletSpawnPointMinRotation: -5
-    bulletSpawnPointMaxRottion: 5
+  damage: 51
+  fireRate: 0.1
+  spreadFactor: 0.02
+  parentAnimator: {fileID: 0}
+  casingPrefab: {fileID: 5054107204007116070, guid: 8e7add0227c30e0489cbf6cad3352542,
+    type: 3}
+  grenadePrefab: {fileID: 218893753449918732, guid: b3d3c08597373264eb4712612c37f22a,
+    type: 3}
+  bulletSpawnPoint: {fileID: 8004682513381504755}
+  casingSpawnPoint: {fileID: 8000764842643823537}
+  grenadeSpawnPoint: {fileID: 8005073743861058569}
+  bodyAudio: {fileID: 7936677448005581913}
+  bulletAudio: {fileID: 7936659388628054167}
+  shoot: {fileID: 8300000, guid: 38b450e2adcb6f542acc8c1d423bd8dc, type: 3}
+  aim: {fileID: 8300000, guid: acaebc89b98b82142bd2b24edb6081e4, type: 3}
+  reload: {fileID: 8300000, guid: 5b907074256e36d41b92e89fb0790633, type: 3}
 --- !u!114 &7611619751035324230
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6372,9 +6376,9 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7999427553278636689}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.8527, z: 0.7841}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0, y: 1.1368684e-13, z: 2.842171e-14, w: 1}
+  m_LocalPosition: {x: -0, y: -0.9472, z: 0.5983}
+  m_LocalScale: {x: 1, y: 1.0000001, z: 1.0000001}
   m_Children: []
   m_Father: {fileID: 8004810788358720545}
   m_RootOrder: 4

@@ -1,6 +1,5 @@
 ﻿using Photon.Pun;
 using Photon.Pun.UtilityScripts;
-using System.Collections;
 using UnityEngine;
 
 namespace Com.NUIGalway.CompGame
@@ -38,19 +37,23 @@ namespace Com.NUIGalway.CompGame
 
 
         #region Monobehaviour Callbacks
-        // Start is called before the first frame update
         void Start()
         {
-            cameraTransform = Camera.main.transform;
-            cameraMain = cameraTransform.GetComponent<Camera>();
             color1 = ClipperGate.GetColor(GetComponentInParent<PhotonView>().Owner.GetPlayerNumber());
             color2 = ClipperGate.GetColor2(GetComponentInParent<PhotonView>().Owner.GetPlayerNumber());
         }
 
+        private void Awake()
+        {
+            if (cameraTransform == null)
+            {
+                cameraTransform = Camera.main.transform;
+                cameraMain = cameraTransform.GetComponent<Camera>();
+            }
+        }
 
         void Update()
-        {
-
+        { 
             if (portal1 != null && portal2 != null)
             {
                 PortalUpdate(portal1.transform, portal2.transform, port2Cam);
@@ -70,9 +73,6 @@ namespace Com.NUIGalway.CompGame
                     {
                         float ang = Vector3.Angle(portal1.transform.right, cameraTransform.forward) - 90;
 
-                        //if (ang > 0) ang -= 90;
-                        //else if (ang < 0) ang += 90;
-
                         Vector3 charV = portal2.transform.rotation.eulerAngles;
                         player.rotation = Quaternion.Euler(0f, charV.y + ang, 0f);
 
@@ -83,9 +83,6 @@ namespace Com.NUIGalway.CompGame
                     {
 
                         float ang = Vector3.Angle(portal2.transform.right, cameraTransform.forward) - 90;
-
-                        //if (ang > 0) ang -= 90;
-                        //else if (ang < 0) ang += 90;
 
                         Vector3 charV = portal1.transform.rotation.eulerAngles;
                         player.rotation = Quaternion.Euler(0f, charV.y + ang, 0f);
@@ -99,7 +96,15 @@ namespace Com.NUIGalway.CompGame
             }
         }
 
+        void OnDisable()
+        {
+            Destroy(portal1);
+            Destroy(portal2);
+        }
+
         #endregion
+
+        #region Private Methods
 
         void PortalUpdate(Transform mainPortal, Transform otherPortal, Camera otherCam)
         {
@@ -127,7 +132,7 @@ namespace Com.NUIGalway.CompGame
 
 
 
-           otherCam.transform.localPosition = new Vector3(horiDistance * -1, distance.y, (vertiDistance - 0.6f) * -1);
+           otherCam.transform.localPosition = new Vector3(horiDistance * -1, distance.y, (vertiDistance) * -1);
 
 
 
@@ -160,6 +165,8 @@ namespace Com.NUIGalway.CompGame
             temp[2].SetTexture("_MainTex", portalRender);           
 
         }
+
+        #endregion
 
         #region Public Methods
 
@@ -254,11 +261,6 @@ namespace Com.NUIGalway.CompGame
 
         #endregion
 
-        private void OnDisable()
-        {
-            Destroy(portal1);
-            Destroy(portal2);
-        }
     }
 }
 

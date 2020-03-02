@@ -13,6 +13,8 @@ TagManager:
   - Portal
   - PlayableCharacter
   - GunModel
+  - FxTemporaire
+  - Coins
   layers:
   - Default
   - TransparentFX

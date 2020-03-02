@@ -1,27 +1,28 @@
 ﻿using Com.NUIGalaway.CompGame;
 using Photon.Pun;
+using Photon.Realtime;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Com.NUIGalway.CompGame
 {
     public class PlayerManager : MonoBehaviourPunCallbacks, IPunObservable
     {
         #region Public Fields
-        [Tooltip("The health of the player")]
-        public float health = 2f;
 
         [Tooltip("Local Player Instnace. Used to know if the local player is represented in the Scene")]
         public static GameObject localPlayerInstance;
+
+        public GameObject coinsPrefab;
 
         #endregion
 
         #region Private Fields
 
-        FPController fpController;
-
-
+        private float health;
+        Text canvasHealth;
 
         #endregion
 
@@ -34,29 +35,24 @@ namespace Com.NUIGalway.CompGame
             if (photonView.IsMine)
             {
                 PlayerManager.localPlayerInstance = this.gameObject;
+                this.gameObject.layer = 8;
+                canvasHealth = GameObject.Find("PlayerCanvas").transform.Find("PlayerInformationPanel").transform.Find("Contrast").Find("CurrentHealth").GetComponent<Text>();
+                canvasHealth.text = ClipperGate.PLAYER_MAX_HEALTH.ToString();
             }
 
-            //the instance isn't destoryed when loading a new scene through level synchornization, smooth transitions.
-            DontDestroyOnLoad(this.gameObject);
         }
 
         void Start()
         {
-
-            if (photonView.IsMine) //only follow the local player with the camera
+            foreach (Player p in PhotonNetwork.PlayerList)
             {
-                ConfigureFPV();
-            }
-            else
-            {
-                Renderer[] fpvMesh = this.transform.GetChild(3).GetComponentsInChildren<Renderer>();
-                foreach (Renderer r in fpvMesh)
+                if (p.ActorNumber == photonView.OwnerActorNr)
                 {
-                    r.enabled = false;
+                    string characterSelection = (string)p.CustomProperties[ClipperGate.CHOSEN_CHARACTER];
+                    health = ClipperGate.PLAYER_MAX_HEALTH;
+                    ConfigureCharacter(characterSelection);
                 }
             }
-
-            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
         // Update is called once per frame
@@ -65,70 +61,75 @@ namespace Com.NUIGalway.CompGame
             //only execute the inputs if it's the local player
             if (photonView.IsMine)
             {
-                fpController.InputProcess();
-
                 if (health <= 0f)
                 {
-                    GameManager.instance.LeaveRoom();
+                    PlayerManager.localPlayerInstance = null;
+                    PhotonNetwork.Instantiate(coinsPrefab.name, this.gameObject.transform.position, Quaternion.identity);
+                    GameManager.instance.Respawn(photonView);
                 }
             }
 
         }
 
-    
-        void CalledOnLevelWasLoaded(int level)
-        {
-            if (!Physics.Raycast(transform.position, -Vector3.up, 5f)) //Sends a raycast downward to see if anything below the player, if not puts them in the centre of the arena
-            {
-                transform.position = new Vector3(0f, 5f, 0f);
-            }
-            if (photonView.IsMine)
-            {
-                ConfigureFPV();
-            }
-        }
-
-        public override void OnDisable()
-        {
-            base.OnDisable();
-            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
-        }
 
         #endregion
 
         #region Private Methods
-        //Proccesses the inputs
+        void ConfigureCharacter(string characterSelected)
+        {
+            var characters = this.gameObject.GetComponentsInChildren<Renderer>();
 
-        void ConfigureFPV()
-        { 
-            fpController = this.transform.Find("arms_assault_rifle_02").gameObject.GetComponent<FPController>();
-
-
-            Renderer[] addons = this.transform.GetChild(0).GetComponentsInChildren<Renderer>();
-            foreach (Renderer r in addons)
+            foreach(Renderer c in characters)
             {
-                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+                if (c.CompareTag("PlayableCharacter") && c.name != characterSelected)
+                {
+
+                    c.gameObject.SetActive(false);
+
+                }
+                else if (c.name == characterSelected && photonView.IsMine)
+                {
+
+                    c.gameObject.layer = 8;
+
+                }
+
+                if (c.CompareTag("GunModel"))
+                {
+                    if (photonView.IsMine)
+                    {
+                        foreach (Transform trans in c.gameObject.GetComponentsInChildren<Transform>(true))
+                        {
+
+                            trans.gameObject.layer = 8;
+
+                        }
+                    }
+                    
+                }
             }
 
-            Renderer[] meshSkin = this.transform.GetChild(1).GetComponentsInChildren<Renderer>();
-            foreach (Renderer r in meshSkin)
-            {
-                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
-            }
-
-            Renderer[] fpvMesh = this.transform.GetChild(3).GetComponentsInChildren<Renderer>();
+            Renderer[] fpvMesh = this.transform.Find("arms_assault_rifle_01").gameObject.GetComponentsInChildren<Renderer>();
             foreach (Renderer r in fpvMesh)
             {
-                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                if (!photonView.IsMine)
+                {
+                    r.enabled = false;
+                }
             }
 
         }
 
+        #endregion
 
 
-        void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode loadingMode)
+        #region Public Methods
+        public void TakeGrenadeDamage(float damage)
         {
-            this.CalledOnLevelWasLoaded(scene.buildIndex);
+            if (photonView.IsMine)
+            {
+                health -= damage;
+            }
         }
 
         #endregion
@@ -140,6 +141,7 @@ namespace Com.NUIGalway.CompGame
 
             if (stream.IsWriting)
             {
+
                 stream.SendNext(health);
             }
             else
@@ -156,8 +158,12 @@ namespace Com.NUIGalway.CompGame
         private void TakeDamage(float damage)
         {
             health -= damage;
+            if (photonView.IsMine)
+            {
+                canvasHealth.text = health.ToString();
+            }
         }
-
         #endregion
+
     }
 }

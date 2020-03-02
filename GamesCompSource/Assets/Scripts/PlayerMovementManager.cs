@@ -1,6 +1,5 @@
-﻿using Photon.Pun;
-using System.Collections;
-using System.Collections.Generic;
+﻿using ExitGames.Client.Photon;
+using Photon.Pun;
 using UnityEngine;
 
 namespace Com.NUIGalway.CompGame
@@ -42,6 +41,8 @@ namespace Com.NUIGalway.CompGame
         float lastRun = 0.0f;
         float executeRate = 0.5f;
 
+        bool running;
+
 
         #endregion Private Fields
 
@@ -54,23 +55,22 @@ namespace Com.NUIGalway.CompGame
             animator = GetComponent<Animator>();
             characterController = GetComponent<CharacterController>();
             mainAudio = GetComponent<AudioSource>();
-            
-            //audio.clip = runningSound;
-            //audio.loop = true;
+            mainAudio.clip = runningSound;
+            mainAudio.loop = true;
 
+            running = false;
             fpvModel = transform.Find("arms_assault_rifle_01").gameObject;
             fpvAnimator = fpvModel.GetComponent<Animator>();
 
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
         }
 
         // Update is called once per frame
         void Update()
         {
-            //we only want to animate the local player, not every single other player that appears
-            if (photonView.IsMine == false && PhotonNetwork.IsConnected == true)
-            {
-                return;
-            }
+            SoundCheck();
+            if (!photonView.IsMine) return;
 
             if (cameraTransform == null)
             {
@@ -80,8 +80,19 @@ namespace Com.NUIGalway.CompGame
                 cameraTransform.rotation = fpvModel.gameObject.transform.rotation;
             }
 
-            //deal with jumping
-            AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+            if (Input.GetButtonDown("Cancel") || Input.GetKeyDown(KeyCode.Tab))
+            {
+                Cursor.visible = !Cursor.visible; // toggle visibility
+                if (Cursor.visible)
+                { // if visible, unlock
+                    Cursor.lockState = CursorLockMode.None;
+                    
+                }
+                else
+                {
+                    Cursor.lockState = CursorLockMode.Locked;
+                }
+            }
 
 
             float x = Input.GetAxis("Horizontal");
@@ -90,21 +101,15 @@ namespace Com.NUIGalway.CompGame
             animator.SetFloat("Horizontal", x);
             animator.SetFloat("Vertical", z);
 
-            if (x != 0 || z != 0)
+            if (x != 0 || z != 0 && !Cursor.visible)
             {
                 fpvAnimator.SetBool("Walk", true);
-                if (!mainAudio.isPlaying)
-                {
-                    //photonView.RPC("StartRunning", RpcTarget.All);
-                }
+                photonView.RPC("IsRunning", RpcTarget.All, true);
             }
             else
             {
                 fpvAnimator.SetBool("Walk", false);
-                if (mainAudio.isPlaying)
-                {
-                    //photonView.RPC("StopRunning", RpcTarget.All);
-                }
+                photonView.RPC("IsRunning", RpcTarget.All, false);
             }
 
             if (characterController.isGrounded)
@@ -138,27 +143,54 @@ namespace Com.NUIGalway.CompGame
             this.gameObject.transform.Rotate(Vector3.up * mouseX);
         }
 
-        void OnControllerColliderHit(ControllerColliderHit hit)
+
+        void OnDisable()
         {
-            if (photonView.IsMine)
-            {
-                if(hit.gameObject.tag == "Portal")
-                {
-                    if (Time.time > executeRate + lastRun)
-                    {
-                        lastRun = Time.time;
-                        var collider = hit.gameObject.GetComponentInParent<PortalCollision>();
-                        collider.Teleport(this.gameObject.transform);
-                    }
-                }
-                
-            }
+            cameraTransform.SetParent(null);
         }
 
-
-        public void SpeedReset()
+        void OnControllerColliderHit(ControllerColliderHit hit)
         {
-            vSpeed = 0f;
+            if (!photonView.IsMine) return;
+
+            if (hit.gameObject.tag == "Portal")
+            {
+                if (Time.time > executeRate + lastRun)
+                {
+                    lastRun = Time.time;
+                    var collider = hit.gameObject.GetComponentInParent<PortalCollision>();
+                    collider.Teleport(this.gameObject.transform);
+                }
+            }
+            else if (hit.gameObject.tag == "Coins")
+            {
+                hit.transform.GetComponent<PhotonView>().RPC("Destruct", RpcTarget.All);
+
+                float score = (float)PhotonNetwork.LocalPlayer.CustomProperties[ClipperGate.PLAYER_SCORE];
+                Hashtable newScore = new Hashtable { { ClipperGate.PLAYER_SCORE, (score + 25f) } };
+                PhotonNetwork.LocalPlayer.SetCustomProperties(newScore);
+            }
+
+        }
+        
+        
+        #endregion
+
+
+        #region Private Methods
+
+        private void SoundCheck()
+        {
+            if (running)
+            {
+                if (!mainAudio.isPlaying)
+                {
+                    mainAudio.Play();
+                }
+            } else
+            {
+                mainAudio.Pause();
+            }
         }
 
         #endregion
@@ -166,15 +198,9 @@ namespace Com.NUIGalway.CompGame
 
         #region RPC
         [PunRPC]
-        private void StartRunning()
+        private void IsRunning(bool state)
         {
-            mainAudio.Play();
-        }
-
-        [PunRPC]
-        private void StopRunning()
-        {
-            mainAudio.Pause();
+            running = state;
         }
         #endregion
 

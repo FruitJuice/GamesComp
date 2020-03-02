@@ -13,6 +13,10 @@ public class DespawnTimer : MonoBehaviour
         StartCoroutine(SelfDestruct());
     }
 
+    void OnCollisionEnter(Collision collision)
+    {
+        Destroy(gameObject);
+    }
 
     private IEnumerator SelfDestruct()
     {

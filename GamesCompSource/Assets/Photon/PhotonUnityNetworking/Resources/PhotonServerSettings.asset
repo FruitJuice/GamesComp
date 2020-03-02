@@ -44,5 +44,13 @@ MonoBehaviour:
   - ShootPortal2
   - StartRunning
   - StopRunning
+  - SendDeath
+  - ShootNoCollision
+  - SpawnCoins
+  - Destruct
+  - UpdateScore
+  - IsRunning
+  - isShooting
+  - parentShoot
   DisableAutoOpenWizard: 1
   ShowSettings: 0

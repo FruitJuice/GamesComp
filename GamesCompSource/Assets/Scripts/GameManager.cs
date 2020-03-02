@@ -76,33 +76,41 @@ namespace Com.NUIGalaway.CompGame
         private void Start()
         {
             instance = this;
-            
-            if (playerFab == null)
-            {
-                Debug.LogError("Missing playerPrefab reference. Please set up in GameObject");
-            }
-            
+
+            SpawnPlayer();
+
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        void SpawnPlayer()
+        {
             if (PlayerManager.localPlayerInstance == null) //only instantiate player if they don't already exist
             {
-                Debug.LogFormat("Instantiating local player from {0}", SceneManager.GetActiveScene().name);
-                //Inside a room, create a character for the local player. Gets synced by using the PhotonNetwork Instantiate.
-                PhotonNetwork.Instantiate(this.playerFab.name, spawnpoints[0], Quaternion.identity, 0);
-            }
-            else
-            {
-                Debug.LogFormat("Ignoring scene loaf for {0}", SceneManagerHelper.ActiveSceneName);
+                int index = Random.Range(0, spawnpoints.Length);
+                PhotonNetwork.Instantiate(this.playerFab.name, spawnpoints[index], Quaternion.identity, 0);
             }
         }
 
         #endregion
 
 
-
         #region Public Methods
 
-        public void LeaveRoom()
+        public void LeaveGame()
         {
             PhotonNetwork.LeaveRoom();
+        }
+
+
+        public void Respawn(PhotonView player)
+        {
+            PhotonNetwork.Destroy(player);
+            StartCoroutine(RespawnTimer());
+            var index = Random.Range(0, spawnpoints.Length);
+            player.transform.position = spawnpoints[index];
         }
 
         #endregion
@@ -111,5 +119,14 @@ namespace Com.NUIGalaway.CompGame
         {
             Debug.Log("ON Player Numbering changed");
         }
+
+        #region IENumerator
+        private IEnumerator RespawnTimer()
+        {
+            yield return new WaitForSeconds(ClipperGate.PLAYER_RESPAWN_TIME);
+            SpawnPlayer();
+        }
+
+        #endregion
     }
 }

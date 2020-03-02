@@ -45,11 +45,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Prefabs:
-    playerImpact: {fileID: 1036925697551712, guid: a845e59c374ae0240812749e46f13033,
+    bulletPrefab: {fileID: 4999717319450848863, guid: a4251a5604fc3c5469abd692693670c8,
       type: 3}
-    otherImpact: {fileID: 1067471869909948, guid: 5e02303289b3c494e8e185be0fbbd405,
+    playerImpact: {fileID: 824980399338364568, guid: 70c1b5dc921ca9d4e9f2c73c30ac0bf6,
       type: 3}
-    muzzleParticles: {fileID: 7304098206143703606, guid: 2dabd14554484ab4485d923ae2001ae2,
+    otherImpact: {fileID: 824980399338364568, guid: 70c1b5dc921ca9d4e9f2c73c30ac0bf6,
       type: 3}
 --- !u!114 &1969879151289790074
 MonoBehaviour:

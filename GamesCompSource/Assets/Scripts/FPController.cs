@@ -1,27 +1,52 @@
 ﻿using Photon.Pun;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Com.NUIGalway.CompGame
 {
-    public class FPController : MonoBehaviour
+    public class FPController : MonoBehaviourPunCallbacks
     {
         #region Public Fields
-
-        [Tooltip("Damage per bullet")]
         public float damage = 0.5f;
+        public float fireRate = 0.2f;
+        public float spreadFactor = 0.02f;
+
+        public Animator parentAnimator;
+
+        public GameObject casingPrefab;
+        public GameObject grenadePrefab;
+
+        public Transform bulletSpawnPoint;
+        public Transform casingSpawnPoint;
+        public Transform grenadeSpawnPoint;
+
+        public AudioSource bodyAudio;
+        public AudioSource bulletAudio;
+
+        public AudioClip shoot;
+        public AudioClip aim;
+        public AudioClip reload;
 
         #endregion
 
         #region Private 
 
         private float grenadeSpawnDelay = 0.56f;
-        
-       
-        Animator animator;
-        Animator parentAnimator;
+
+        Text canvasAmmo;
         PhotonView fxManager;
+        Animator animator;
         PortalManager portalManager;
+     
+
+        bool aimSoundPlayed;
+        bool isReloading;
+        bool isAiming;
+        float lastFired;
+
+        static int maxAmmo = 40;
+        private int currentAmmo = 40;
 
         #endregion
 
@@ -31,103 +56,109 @@ namespace Com.NUIGalway.CompGame
         void Start()
         {
             animator = GetComponent<Animator>();
-            parentAnimator = transform.GetComponentInParent<Animator>();
-            fxManager = GameObject.Find("FXManager").GetComponent<PhotonView>();
             portalManager = GetComponent<PortalManager>();
-
+            bulletAudio.clip = shoot;
         }
-
-        // Update is called once per frame
 
         private void Awake()
         {
-            
-        }
-
-        void LateUpdate()
-        {
-            if(fxManager == null)
+            if (photonView.IsMine)
             {
-                fxManager = GameObject.Find("FXManager").GetComponent<PhotonView>(); 
-            }
-        }
-
-        #endregion
-
-        #region Public Methods
-
-
-        [System.Serializable]
-        public class prefabs
-        {
-            [Header("Prefabs")]
-            public GameObject casingPrefab;
-            public GameObject grenadePrefab;
-        }
-        public prefabs Prefabs;
-
-        [System.Serializable]
-        public class spawnpoints
-        {
-            [Header("Spawnpoints")]
-            public Transform casingSpawnPoint;
-            public Transform bulletSpawnPoint;
-            public Transform grenadeSpawnPoint;
-            [Range(-10, 10)]
-            public float bulletSpawnPointMinRotation = -5f;
-            [Range(-10, 10)]
-            public float bulletSpawnPointMaxRottion = 5f;
-
-        }
-        public spawnpoints Spawnpoints;
-
-        #endregion
-
-        
-
-        public void InputProcess()
-        {
-            if (Input.GetButtonDown("Cancel"))
-            {
-                Cursor.visible = !Cursor.visible; // toggle visibility
-                if (Cursor.visible)
-                { // if visible, unlock
-                    Cursor.lockState = CursorLockMode.None;
-                }
-                else
-                {
-                    Cursor.lockState = CursorLockMode.Locked;
-                }
+                fxManager = GameObject.Find("FXManager").GetComponent<PhotonView>();
+                canvasAmmo = GameObject.Find("PlayerCanvas").transform.Find("PlayerInformationPanel").transform.Find("Contrast1").Find("CurrentAmmo").GetComponent<Text>();
+                canvasAmmo.text = (maxAmmo.ToString() + " / " + maxAmmo.ToString());
             }
 
-            if (Input.GetButtonDown("Fire1"))
+        }
+
+        void OnDisable()
+        {
+            if(photonView.IsMine) canvasAmmo.text = "RESPAWNING";
+        }
+
+        void Update()
+        {
+            if (!photonView.IsMine)
             {
-
-                Fire();
-
+                return;
             }
-            if (Input.GetButton("Fire2"))
-            {
-                animator.SetBool("Aim", true);
+
+            if(animator.GetCurrentAnimatorStateInfo(0).IsName("Reload Out Of Ammo")){
+                isReloading = true;
             }
             else
             {
-                animator.SetBool("Aim", false);
+                isReloading = false;
             }
 
-            if (Input.GetKeyDown(KeyCode.G))
+
+            if (Input.GetButton("Fire2") && !isReloading)
             {
+                isAiming = true;
+                animator.SetBool("Aim", isAiming);
 
+                if (!aimSoundPlayed)
+                {
+                    bodyAudio.clip = aim;
+                    bodyAudio.Play();
+
+                    aimSoundPlayed = true;
+                }
+
+            }
+            else
+            {
+                isAiming = false;
+                animator.SetBool("Aim", isAiming);
+                aimSoundPlayed = false;
+            }
+
+            if (Input.GetButton("Fire1") && !isReloading && currentAmmo > 0)
+            {
+                if (Time.time > fireRate + lastFired)
+                {
+                    lastFired = Time.time;
+
+                    currentAmmo -= 1;
+                    canvasAmmo.text = (currentAmmo.ToString() + " / " + maxAmmo.ToString());
+
+                    photonView.RPC("isShooting", RpcTarget.All);
+                    if (!isAiming)
+                    {
+                        Fire();
+                        animator.Play("Fire", 0, 0f);
+                    }
+                    else
+                    {
+                        Fire();
+                        animator.Play("Aim Fire", 0, 0f);
+                    }
+                }
+            }
+
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                bodyAudio.clip = reload;
+                bodyAudio.Play();
+
+                animator.Play("Reload Out Of Ammo", 0, 0f);
+                parentAnimator.SetTrigger("Reload");
+
+                currentAmmo = maxAmmo;
+                canvasAmmo.text = (currentAmmo.ToString() + " / " + maxAmmo.ToString());
+            }
+
+            if (Input.GetKeyDown(KeyCode.G) && !isReloading && !isReloading)
+            {
                 Grenade();
-
             }
 
 
-            if (Input.GetKeyDown(KeyCode.O))
+            if (Input.GetKeyDown(KeyCode.O) && !isAiming && !isReloading)
             {
                 RaycastHit hit = new RaycastHit();
                 
-                if (Physics.Raycast(Spawnpoints.bulletSpawnPoint.transform.position, Spawnpoints.bulletSpawnPoint.transform.forward, out hit))
+                if (Physics.Raycast(bulletSpawnPoint.transform.position, bulletSpawnPoint.transform.forward, out hit))
                 {
                     if (hit.transform.CompareTag("PortalPlace"))
                     {
@@ -137,11 +168,11 @@ namespace Com.NUIGalway.CompGame
 
             }
 
-            if (Input.GetKeyDown(KeyCode.I))
+            if (Input.GetKeyDown(KeyCode.I) && !isAiming && !isReloading)
             {
                 RaycastHit hit = new RaycastHit();
 
-                if (Physics.Raycast(Spawnpoints.bulletSpawnPoint.transform.position, Spawnpoints.bulletSpawnPoint.transform.forward, out hit))
+                if (Physics.Raycast(bulletSpawnPoint.transform.position, bulletSpawnPoint.transform.forward, out hit))
                 {
                     if (hit.transform.CompareTag("PortalPlace"))
                     {
@@ -153,39 +184,46 @@ namespace Com.NUIGalway.CompGame
 
         }
 
+        #endregion
+
         #region Private Methods
 
         private void Fire()
         {
+            Vector3 precision = new Vector3(0.5f,0.5f);
+            if (!isAiming)
+            {
+                precision.x += Random.Range(-spreadFactor, spreadFactor);
+                precision.y += Random.Range(-spreadFactor, spreadFactor);
+            }
 
-            animator.Play("Fire", 0);
-            //print(parentAnimator.GetLayerIndex("Additive Layer"));
-            parentAnimator.Play("Fire", parentAnimator.GetLayerIndex("Additive Layer"));
+            photonView.RPC("parentShoot", RpcTarget.All);
 
-
-            Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f,0.5f));
+            var layerMask = ~(1 << 8);
+            Ray ray = Camera.main.ViewportPointToRay(precision);
             RaycastHit hit;
             
             
-            if(Physics.Raycast(ray, out hit))
+            if(Physics.Raycast(ray, out hit, 1000, layerMask))
             {
                 if(hit.transform.CompareTag("Player"))
                 {
                     hit.transform.GetComponent<PhotonView>().RPC("TakeDamage", RpcTarget.All, damage);
-                    fxManager.RPC("ShotPlayer", RpcTarget.All, Spawnpoints.bulletSpawnPoint.transform.position, hit.point);
+                  
+                    fxManager.RPC("ShotPlayer", RpcTarget.All, bulletSpawnPoint.transform.position, hit.point);
                 }
                 else if(hit.transform.CompareTag("Portal"))
                 {
                     if (portalManager.CheckOwnership(hit.collider.transform.parent.gameObject))
                     {
-                        //fxManager.RPC("ShootNoCollision", RpcTarget.All, Spawnpoints.bulletSpawnPoint.transform.position, hit.point);
+                        fxManager.RPC("ShootNoCollision", RpcTarget.All, bulletSpawnPoint.transform.position, hit.point);
                         Debug.DrawRay(ray.origin, ray.direction, Color.green, 4);
 
                         Ray shootThroughPortalRay = portalManager.ShootThroughPortal(hit.collider.transform.parent.gameObject, hit.point, ray.direction);
                         if(Physics.Raycast(shootThroughPortalRay, out hit))
                         {
                             Debug.DrawRay(shootThroughPortalRay.origin, shootThroughPortalRay.direction, Color.green, 4);
-                            if (hit.transform.CompareTag("Player") && hit.transform != this.transform)
+                            if (hit.transform.CompareTag("Player"))
                             {
                                 hit.transform.GetComponent<PhotonView>().RPC("TakeDamage", RpcTarget.All, damage);
                                 fxManager.RPC("ShotPlayer", RpcTarget.All, shootThroughPortalRay.origin, hit.point);
@@ -197,10 +235,12 @@ namespace Com.NUIGalway.CompGame
                         }
                         
                     }
+                    else fxManager.RPC("ShotOther", RpcTarget.All, bulletSpawnPoint.transform.position, hit.point);
                 }
                 else
                 {
-                    fxManager.RPC("ShotOther", RpcTarget.All, Spawnpoints.bulletSpawnPoint.transform.position, hit.point);
+                    fxManager.RPC("ShotOther", RpcTarget.All, bulletSpawnPoint.transform.position, hit.point);
+                    
                 }
             }
 
@@ -210,6 +250,8 @@ namespace Com.NUIGalway.CompGame
 
         private void Grenade()
         {
+            animator.Play("GrenadeThrow", 0);
+            parentAnimator.SetTrigger("ThrowGrenade");
             GetComponent<PhotonView>().RPC("ThrowGrenade", RpcTarget.All);
         }
 
@@ -221,8 +263,18 @@ namespace Com.NUIGalway.CompGame
         private void ThrowGrenade()
         {
             StartCoroutine(GrenadeDelay());
-            parentAnimator.Play("Grenade_Throw", parentAnimator.GetLayerIndex("Additive Layer"));
-            animator.Play("GrenadeThrow", 0);
+        }
+
+        [PunRPC]
+        private void isShooting()
+        {
+            bulletAudio.Play();
+        }
+
+        [PunRPC]
+        private void parentShoot()
+        {
+            parentAnimator.Play("Fire", 1, 0f);
         }
 
         #endregion
@@ -234,8 +286,8 @@ namespace Com.NUIGalway.CompGame
 
             yield return new WaitForSeconds(grenadeSpawnDelay);
 
-            grenade = Instantiate(Prefabs.grenadePrefab, Spawnpoints.grenadeSpawnPoint.transform.position, Spawnpoints.grenadeSpawnPoint.rotation);
-            grenade.GetComponent<Rigidbody>().velocity = grenade.transform.forward * 5f;
+            grenade = Instantiate(grenadePrefab, grenadeSpawnPoint.transform.position, grenadeSpawnPoint.rotation);
+            grenade.GetComponent<Rigidbody>().velocity = grenade.transform.forward * 3f;
         }
 
         #endregion
