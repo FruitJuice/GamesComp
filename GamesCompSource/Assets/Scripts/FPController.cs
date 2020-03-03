@@ -11,6 +11,7 @@ namespace Com.NUIGalway.CompGame
         public float damage = 0.5f;
         public float fireRate = 0.2f;
         public float spreadFactor = 0.02f;
+        public float grenadeForce = 3f;
 
         public Animator parentAnimator;
 
@@ -182,6 +183,7 @@ namespace Com.NUIGalway.CompGame
 
             }
 
+
         }
 
         #endregion
@@ -216,7 +218,7 @@ namespace Com.NUIGalway.CompGame
                 {
                     if (portalManager.CheckOwnership(hit.collider.transform.parent.gameObject))
                     {
-                        fxManager.RPC("ShootNoCollision", RpcTarget.All, bulletSpawnPoint.transform.position, hit.point);
+                        fxManager.RPC("ShootPortal", RpcTarget.All, bulletSpawnPoint.transform.position, hit.point);
                         Debug.DrawRay(ray.origin, ray.direction, Color.green, 4);
 
                         Ray shootThroughPortalRay = portalManager.ShootThroughPortal(hit.collider.transform.parent.gameObject, hit.point, ray.direction);
@@ -242,6 +244,10 @@ namespace Com.NUIGalway.CompGame
                     fxManager.RPC("ShotOther", RpcTarget.All, bulletSpawnPoint.transform.position, hit.point);
                     
                 }
+            }
+            else
+            {
+                fxManager.RPC("ShootNoCollision", RpcTarget.All, bulletSpawnPoint.transform.position, ray.direction);
             }
 
 
@@ -287,7 +293,7 @@ namespace Com.NUIGalway.CompGame
             yield return new WaitForSeconds(grenadeSpawnDelay);
 
             grenade = Instantiate(grenadePrefab, grenadeSpawnPoint.transform.position, grenadeSpawnPoint.rotation);
-            grenade.GetComponent<Rigidbody>().velocity = grenade.transform.forward * 3f;
+            grenade.GetComponent<Rigidbody>().velocity = grenade.transform.forward * grenadeForce;
         }
 
         #endregion

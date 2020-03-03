@@ -42,7 +42,7 @@ namespace Com.NUIGalway.CompGame
         float executeRate = 0.5f;
 
         bool running;
-
+        bool cursorLocked = true;
 
         #endregion Private Fields
 
@@ -80,20 +80,25 @@ namespace Com.NUIGalway.CompGame
                 cameraTransform.rotation = fpvModel.gameObject.transform.rotation;
             }
 
-            if (Input.GetButtonDown("Cancel") || Input.GetKeyDown(KeyCode.Tab))
+
+
+            if (Input.GetKeyDown(KeyCode.Escape))
             {
-                Cursor.visible = !Cursor.visible; // toggle visibility
-                if (Cursor.visible)
-                { // if visible, unlock
-                    Cursor.lockState = CursorLockMode.None;
-                    
+                cursorLocked = !cursorLocked;
+                if (cursorLocked)
+                {
+                    Cursor.lockState = CursorLockMode.Locked;
+                    Cursor.visible = false;
+                    cursorLocked = true;
                 }
                 else
                 {
-                    Cursor.lockState = CursorLockMode.Locked;
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
+                    cursorLocked = false;
                 }
             }
-
+            
 
             float x = Input.GetAxis("Horizontal");
             float z = Input.GetAxis("Vertical");
@@ -101,7 +106,7 @@ namespace Com.NUIGalway.CompGame
             animator.SetFloat("Horizontal", x);
             animator.SetFloat("Vertical", z);
 
-            if (x != 0 || z != 0 && !Cursor.visible)
+            if (x != 0 || z != 0 && !cursorLocked)
             {
                 fpvAnimator.SetBool("Walk", true);
                 photonView.RPC("IsRunning", RpcTarget.All, true);
@@ -146,6 +151,8 @@ namespace Com.NUIGalway.CompGame
 
         void OnDisable()
         {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
             cameraTransform.SetParent(null);
         }
 
@@ -158,7 +165,7 @@ namespace Com.NUIGalway.CompGame
                 if (Time.time > executeRate + lastRun)
                 {
                     lastRun = Time.time;
-                    var collider = hit.gameObject.GetComponentInParent<PortalCollision>();
+                    var collider = hit.gameObject.GetComponent<PortalCollision>();
                     collider.Teleport(this.gameObject.transform);
                 }
             }

@@ -49,7 +49,6 @@ namespace Com.NUIGalway.CompGame
                 else
                 {
                     SetActivePanel(EscapePanel.name);
-                    FillTable();
                 }
             }
         }
@@ -81,6 +80,7 @@ namespace Com.NUIGalway.CompGame
         {
             PlayerInformationPanel.alpha = System.Convert.ToSingle((activePanel.Equals(PlayerInformationPanel.name)));
             EscapePanel.alpha = System.Convert.ToSingle((activePanel.Equals(EscapePanel.name)));
+            EscapePanel.interactable = activePanel.Equals(EscapePanel.name);
             UserScorePanel.alpha = System.Convert.ToSingle((activePanel.Equals(UserScorePanel.name)));
         }
 

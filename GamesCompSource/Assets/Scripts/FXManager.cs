@@ -62,11 +62,22 @@ namespace Com.NUIGalway.CompGame
         }
 
         [PunRPC]
-        private void ShootNoCollision(Vector3 origin, Vector3 hitPoint)
+        private void ShootPortal(Vector3 origin, Vector3 hitPoint)
         {
             Vector3 dir = (hitPoint - origin).normalized;
             var BulletEffect = Instantiate(Prefabs.bulletPrefab, origin, Quaternion.identity);
             BulletEffect.GetComponent<Rigidbody>().velocity = dir * 200;
+
+            var emitParams = new ParticleSystem.EmitParams();
+            emitParams.position = origin;
+            //Prefabs.muzzleParticles.Emit(emitParams, 1);
+        }
+
+        [PunRPC]
+        private void ShootNoCollision(Vector3 origin, Vector3 direction)
+        {
+            var BulletEffect = Instantiate(Prefabs.bulletPrefab, origin, Quaternion.identity);
+            BulletEffect.GetComponent<Rigidbody>().velocity = direction * 200;
 
             var emitParams = new ParticleSystem.EmitParams();
             emitParams.position = origin;

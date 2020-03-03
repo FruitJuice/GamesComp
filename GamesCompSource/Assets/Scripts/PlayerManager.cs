@@ -129,6 +129,7 @@ namespace Com.NUIGalway.CompGame
             if (photonView.IsMine)
             {
                 health -= damage;
+                canvasHealth.text = health.ToString();
             }
         }
 

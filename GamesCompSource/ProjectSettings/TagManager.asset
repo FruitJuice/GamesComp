@@ -15,6 +15,7 @@ TagManager:
   - GunModel
   - FxTemporaire
   - Coins
+  - Grenade
   layers:
   - Default
   - TransparentFX

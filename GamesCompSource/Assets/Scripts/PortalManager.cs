@@ -32,6 +32,11 @@ namespace Com.NUIGalway.CompGame
         private Transform cameraTransform;
         private Camera cameraMain;
 
+        private bool grenadeTele = false;
+        Vector3 grenadeHitPoint;
+        GameObject grenadeTemp;
+        GameObject grenadeTempPortalHit;
+        GameObject grenadeTempPortalOpposite;
 
         #endregion
 
@@ -56,9 +61,19 @@ namespace Com.NUIGalway.CompGame
         { 
             if (portal1 != null && portal2 != null)
             {
-                PortalUpdate(portal1.transform, portal2.transform, port2Cam);
-                PortalUpdate(portal2.transform, portal1.transform, port1Cam);
+                PortalUpdate(portal1.transform, portal2.transform, port2Cam, camTexture2, color1);
+                PortalUpdate(portal2.transform, portal1.transform, port1Cam, camTexture1, color2);
                 
+            }
+            if(Input.GetKeyDown(KeyCode.K) && portal1 != null)
+            {
+                Destroy(portal1);
+                port1Cam = null;
+            }
+            if (Input.GetKeyDown(KeyCode.J) && portal2 != null)
+            {
+                Destroy(portal2);
+                port2Cam = null;
             }
 
         }
@@ -94,6 +109,29 @@ namespace Com.NUIGalway.CompGame
                 }
                 proccessCollision = false;
             }
+
+            if (grenadeTele)
+            {
+                Vector3 localDirection = grenadeTempPortalHit.transform.InverseTransformDirection(grenadeTemp.transform.GetComponent<Rigidbody>().velocity.normalized);
+                //localDirection.z *= -1;
+                localDirection.x *= -1;
+                Vector3 transformedDirection = grenadeTempPortalOpposite.transform.TransformDirection(localDirection);
+                grenadeTemp.transform.GetComponent<Rigidbody>().velocity = transformedDirection * grenadeTemp.transform.GetComponent<Rigidbody>().velocity.magnitude;
+
+
+                Vector3 localPosition = grenadeTempPortalHit.transform.InverseTransformPoint(grenadeHitPoint);
+                localPosition.x *= -1;
+                Vector3 newPosition = grenadeTempPortalOpposite.transform.TransformPoint(localPosition);
+                newPosition += (grenadeTempPortalOpposite.transform.forward * 0.2f);
+
+                grenadeTemp.transform.position = newPosition;
+                grenadeTemp.GetComponent<TrailRenderer>().Clear();
+
+                grenadeTele = false;
+
+                Debug.DrawRay(newPosition, transformedDirection, Color.green, 4);
+
+            }
         }
 
         void OnDisable()
@@ -106,8 +144,23 @@ namespace Com.NUIGalway.CompGame
 
         #region Private Methods
 
-        void PortalUpdate(Transform mainPortal, Transform otherPortal, Camera otherCam)
+        void PortalUpdate(Transform mainPortal, Transform otherPortal, Camera otherCam, RenderTexture otherCamTex, Color border)
         {
+            if (!VisibleFromCamera(mainPortal.GetComponent<MeshRenderer>(), cameraMain))
+            {
+                if (otherCamTex != null)
+                {
+                    otherCamTex.Release();
+                    otherCam.enabled = false;
+                }
+                return;
+            }
+            if(!otherCam.enabled)
+            {
+                otherCam.enabled = true;
+                CreateRenderTexture(otherCamTex, otherCam, mainPortal, border);
+            }
+
             float horizontalDiff = Vector3.Angle(mainPortal.right, cameraTransform.forward);
             float verticalDiff = Vector3.Angle(cameraTransform.forward, mainPortal.up);
 
@@ -149,7 +202,7 @@ namespace Com.NUIGalway.CompGame
             otherCam.projectionMatrix = cameraMain.CalculateObliqueMatrix(clipPlaneCameraSpace);
         }
 
-        void CreateRenderTexture(RenderTexture portalRender, Camera sourceCam, GameObject target, Color borderColor)
+        void CreateRenderTexture(RenderTexture portalRender, Camera sourceCam, Transform target, Color borderColor)
         {
             if (portalRender != null)
             {
@@ -165,6 +218,13 @@ namespace Com.NUIGalway.CompGame
             temp[2].SetTexture("_MainTex", portalRender);           
 
         }
+
+        bool VisibleFromCamera(Renderer renderer, Camera camera)
+        {
+            Plane[] frustumPlanes = GeometryUtility.CalculateFrustumPlanes(camera);
+            return GeometryUtility.TestPlanesAABB(frustumPlanes, renderer.bounds);
+        }
+
 
         #endregion
 
@@ -223,6 +283,38 @@ namespace Com.NUIGalway.CompGame
             return new Ray();
         }
 
+
+        public void TeleportGrenade(GameObject myPortal, GameObject grenade, Vector3 hitPoint)
+        {
+
+            if (myPortal == portal1)
+            {
+                grenadeTemp = grenade;
+                grenadeHitPoint = hitPoint;
+                grenadeTempPortalHit = portal1;
+                grenadeTempPortalOpposite = portal2;
+                grenadeTele = true;
+            }
+            else if (myPortal == portal2)
+            {
+                grenadeTemp = grenade;
+                grenadeHitPoint = hitPoint;
+                grenadeTempPortalHit = portal2;
+                grenadeTempPortalOpposite = portal1;
+                grenadeTele = true;
+            }
+
+            
+           
+            // This should give the relative rotation of the destination portal to the current one
+            //Quaternion relativeRotation = Quaternion.Inverse(tempPortalHit.transform.rotation) * tempPortalOpposite.transform.rotation;
+            //grenade.transform.rotation *= relativeRotation;
+
+            
+            // Whatever way velocity is being maintained, I'm simplifying it here
+            // This should rotate the velocity vector in the same manner as the character is rotated
+            //grenade.transform.GetComponent<Rigidbody>().velocity = relativeRotation * grenade.transform.GetComponent<Rigidbody>().velocity;
+        }
         #endregion
 
 
@@ -238,10 +330,10 @@ namespace Com.NUIGalway.CompGame
                 camTexture1 = null;
             }
             portal1 = Instantiate(portal, spawnPoint, rotAngle);
-            portal1.GetComponent<PortalCollision>().Initialise(this);
+            portal1.GetComponentInChildren<PortalCollision>().Initialise(this, portal1);
             port1Cam = portal1.GetComponentInChildren<Camera>();
-            CreateRenderTexture(camTexture2, port2Cam, portal1, color1);
-            CreateRenderTexture(camTexture1, port1Cam, portal2, color2);
+            CreateRenderTexture(camTexture2, port2Cam, portal1.transform, color1);
+            CreateRenderTexture(camTexture1, port1Cam, portal2.transform, color2);
         }
 
         [PunRPC]
@@ -253,10 +345,10 @@ namespace Com.NUIGalway.CompGame
                 camTexture2 = null;
             }
             portal2 = Instantiate(portal, spawnPoint, rotAngle);
-            portal2.GetComponent<PortalCollision>().Initialise(this);
+            portal2.GetComponentInChildren<PortalCollision>().Initialise(this, portal2);
             port2Cam = portal2.GetComponentInChildren<Camera>();
-            CreateRenderTexture(camTexture1, port1Cam, portal2, color2);
-            CreateRenderTexture(camTexture2, port2Cam, portal1, color1);
+            CreateRenderTexture(camTexture1, port1Cam, portal2.transform, color2);
+            CreateRenderTexture(camTexture2, port2Cam, portal1.transform, color1);
         }
 
         #endregion

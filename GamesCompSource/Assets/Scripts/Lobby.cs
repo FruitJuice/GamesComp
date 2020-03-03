@@ -52,6 +52,19 @@ namespace Com.NUIGalway.CompGame
             NameInputField.text = "Player " + Random.Range(1000, 10000);
         }
 
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.T))
+            {
+                if (Debug.isDebugBuild)
+                {
+                    PhotonNetwork.CurrentRoom.IsOpen = false;
+                    PhotonNetwork.CurrentRoom.IsVisible = false;
+                    PhotonNetwork.LoadLevel("LevelTEST");
+                }
+            }
+        }
+
         #endregion
 
         #region PUN CALLBACKS
@@ -247,6 +260,7 @@ namespace Com.NUIGalway.CompGame
 
             PhotonNetwork.LoadLevel("Level 1");
         }
+
 
         public void OnLeaveRoomButtonClicked()
         {

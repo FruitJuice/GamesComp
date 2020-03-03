@@ -8,17 +8,31 @@ namespace Com.NUIGalway.CompGame
     {
 
         private PortalManager parentScript;
+        private GameObject parent;
 
-        public void Initialise(PortalManager portalManager)
+        private void OnCollisionEnter(Collision collision)
+        {
+            if (collision.gameObject.CompareTag("Grenade"))
+            {
+                Physics.IgnoreCollision(collision.collider, gameObject.GetComponent<BoxCollider>());
+                ContactPoint contactPoint = collision.contacts[0];
+                parentScript.TeleportGrenade(parent, collision.gameObject, contactPoint.point);
+            }
+        }
+
+
+        public void Initialise(PortalManager portalManager, GameObject parent)
         {
             parentScript = portalManager;
+            this.parent = parent;
         }
 
         public void Teleport(Transform character)
         {
 
-            parentScript.HandleCollision(this.gameObject, character);            
+            parentScript.HandleCollision(parent, character);            
         }
+
 
     }
 }

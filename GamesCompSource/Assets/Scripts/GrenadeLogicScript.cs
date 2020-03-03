@@ -56,6 +56,8 @@ namespace Com.NUIGalway.CompGame
                 }
 
             }
+
+            Destroy(this.gameObject);
         }
 
     }
