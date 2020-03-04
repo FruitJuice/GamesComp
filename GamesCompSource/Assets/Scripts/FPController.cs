@@ -8,10 +8,10 @@ namespace Com.NUIGalway.CompGame
     public class FPController : MonoBehaviourPunCallbacks
     {
         #region Public Fields
-        public float damage = 0.5f;
-        public float fireRate = 0.2f;
+        public float damage = 7.5f;
+        public float fireRate = 0.1f;
         public float spreadFactor = 0.02f;
-        public float grenadeForce = 3f;
+        public float grenadeForce = 0.25f;
 
         public Animator parentAnimator;
 
@@ -39,6 +39,7 @@ namespace Com.NUIGalway.CompGame
         PhotonView fxManager;
         Animator animator;
         PortalManager portalManager;
+        PhotonView myView;
      
 
         bool aimSoundPlayed;
@@ -58,6 +59,7 @@ namespace Com.NUIGalway.CompGame
         {
             animator = GetComponent<Animator>();
             portalManager = GetComponent<PortalManager>();
+            myView = gameObject.GetComponent<PhotonView>();
             bulletAudio.clip = shoot;
         }
 
@@ -163,7 +165,7 @@ namespace Com.NUIGalway.CompGame
                 {
                     if (hit.transform.CompareTag("PortalPlace"))
                     {
-                        gameObject.GetComponent<PhotonView>().RPC("ShootPortal1", RpcTarget.All, hit.point + (hit.transform.forward*0.01f) - hit.transform.up.normalized, hit.transform.rotation);
+                        myView.RPC("ShootPortal1", RpcTarget.All, hit.point + (hit.transform.forward*0.01f) - hit.transform.up.normalized, hit.transform.rotation);
                     }
                 }
 
@@ -177,12 +179,20 @@ namespace Com.NUIGalway.CompGame
                 {
                     if (hit.transform.CompareTag("PortalPlace"))
                     {
-                        gameObject.GetComponent<PhotonView>().RPC("ShootPortal2", RpcTarget.All, hit.point + (hit.transform.forward*0.01f) - hit.transform.up.normalized, hit.transform.rotation);
+                        myView.RPC("ShootPortal2", RpcTarget.All, hit.point + (hit.transform.forward*0.01f) - hit.transform.up.normalized, hit.transform.rotation);
                     }
                 }
 
             }
 
+            if (Input.GetKeyDown(KeyCode.K))
+            {
+                myView.RPC("DestroyPortal1", RpcTarget.All);
+            }
+            if (Input.GetKeyDown(KeyCode.J))
+            {
+                myView.RPC("DestroyPortal2", RpcTarget.All);
+            }
 
         }
 

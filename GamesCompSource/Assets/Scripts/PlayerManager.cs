@@ -1,10 +1,9 @@
 ﻿using Com.NUIGalaway.CompGame;
 using Photon.Pun;
 using Photon.Realtime;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using ExitGames.Client.Photon;
 
 namespace Com.NUIGalway.CompGame
 {
@@ -63,6 +62,12 @@ namespace Com.NUIGalway.CompGame
             {
                 if (health <= 0f)
                 {
+                    float score = (float)PhotonNetwork.LocalPlayer.CustomProperties[ClipperGate.PLAYER_SCORE];
+                    if (score >= 25)
+                    {
+                        Hashtable newScore = new Hashtable { { ClipperGate.PLAYER_SCORE, (score - 25f) } };
+                        PhotonNetwork.LocalPlayer.SetCustomProperties(newScore);
+                    }
                     PlayerManager.localPlayerInstance = null;
                     PhotonNetwork.Instantiate(coinsPrefab.name, this.gameObject.transform.position, Quaternion.identity);
                     GameManager.instance.Respawn(photonView);

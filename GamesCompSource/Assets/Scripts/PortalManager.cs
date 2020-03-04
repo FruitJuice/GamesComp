@@ -63,17 +63,6 @@ namespace Com.NUIGalway.CompGame
             {
                 PortalUpdate(portal1.transform, portal2.transform, port2Cam, camTexture2, color1);
                 PortalUpdate(portal2.transform, portal1.transform, port1Cam, camTexture1, color2);
-                
-            }
-            if(Input.GetKeyDown(KeyCode.K) && portal1 != null)
-            {
-                Destroy(portal1);
-                port1Cam = null;
-            }
-            if (Input.GetKeyDown(KeyCode.J) && portal2 != null)
-            {
-                Destroy(portal2);
-                port2Cam = null;
             }
 
         }
@@ -138,6 +127,8 @@ namespace Com.NUIGalway.CompGame
         {
             Destroy(portal1);
             Destroy(portal2);
+            camTexture1.Release();
+            camTexture2.Release();
         }
 
         #endregion
@@ -155,7 +146,7 @@ namespace Com.NUIGalway.CompGame
                 }
                 return;
             }
-            if(!otherCam.enabled)
+            if(otherCam.enabled == false)
             {
                 otherCam.enabled = true;
                 CreateRenderTexture(otherCamTex, otherCam, mainPortal, border);
@@ -303,17 +294,6 @@ namespace Com.NUIGalway.CompGame
                 grenadeTempPortalOpposite = portal1;
                 grenadeTele = true;
             }
-
-            
-           
-            // This should give the relative rotation of the destination portal to the current one
-            //Quaternion relativeRotation = Quaternion.Inverse(tempPortalHit.transform.rotation) * tempPortalOpposite.transform.rotation;
-            //grenade.transform.rotation *= relativeRotation;
-
-            
-            // Whatever way velocity is being maintained, I'm simplifying it here
-            // This should rotate the velocity vector in the same manner as the character is rotated
-            //grenade.transform.GetComponent<Rigidbody>().velocity = relativeRotation * grenade.transform.GetComponent<Rigidbody>().velocity;
         }
         #endregion
 
@@ -327,7 +307,8 @@ namespace Com.NUIGalway.CompGame
             if(portal1 != null)
             {
                 Destroy(portal1);
-                camTexture1 = null;
+                camTexture1.Release();
+                camTexture2.Release();
             }
             portal1 = Instantiate(portal, spawnPoint, rotAngle);
             portal1.GetComponentInChildren<PortalCollision>().Initialise(this, portal1);
@@ -342,13 +323,35 @@ namespace Com.NUIGalway.CompGame
             if (portal2 != null)
             {
                 Destroy(portal2);
-                camTexture2 = null;
+                camTexture2.Release();
+                camTexture1.Release();
             }
             portal2 = Instantiate(portal, spawnPoint, rotAngle);
             portal2.GetComponentInChildren<PortalCollision>().Initialise(this, portal2);
             port2Cam = portal2.GetComponentInChildren<Camera>();
             CreateRenderTexture(camTexture1, port1Cam, portal2.transform, color2);
             CreateRenderTexture(camTexture2, port2Cam, portal1.transform, color1);
+        }
+
+        [PunRPC]
+        private void DestroyPortal1()
+        {
+            if (portal1 != null)
+            {
+                Destroy(portal1);
+                port1Cam = null;
+                camTexture1.Release();
+            }
+        }
+
+        [PunRPC]
+        private void DestroyPortal2()
+        {
+            if (portal2 != null) {
+                Destroy(portal2);
+                port2Cam = null;
+                camTexture2.Release();
+            }
         }
 
         #endregion

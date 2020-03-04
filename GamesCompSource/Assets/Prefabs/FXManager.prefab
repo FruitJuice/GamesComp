@@ -47,7 +47,7 @@ MonoBehaviour:
   Prefabs:
     bulletPrefab: {fileID: 4999717319450848863, guid: a4251a5604fc3c5469abd692693670c8,
       type: 3}
-    playerImpact: {fileID: 824980399338364568, guid: 70c1b5dc921ca9d4e9f2c73c30ac0bf6,
+    playerImpact: {fileID: 824980399338364568, guid: 35632ed5ac2a6c4419a2e4f6dc44bb7e,
       type: 3}
     otherImpact: {fileID: 824980399338364568, guid: 70c1b5dc921ca9d4e9f2c73c30ac0bf6,
       type: 3}

@@ -267,6 +267,11 @@ namespace Com.NUIGalway.CompGame
             PhotonNetwork.LeaveRoom();
         }
 
+        public void OnExitGameButtonClicked()
+        {
+            Application.Quit();
+        }
+
         #endregion
 
         private bool CheckPlayersReady()

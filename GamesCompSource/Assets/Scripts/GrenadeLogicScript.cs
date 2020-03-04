@@ -7,12 +7,12 @@ namespace Com.NUIGalway.CompGame
     public class GrenadeLogicScript : MonoBehaviour
     {
         public float grenadeDamage = 15.0f;
-        public float grenadeTimer = 5.0f;
-        public float min = 400f;
-        public float max = 600f;
+        public float grenadeTimer = 2.5f;
+        public float min = 1000f;
+        public float max = 200f;
 
         public GameObject explosionPrefab;
-        public float radius = 15.0f;
+        public float radius = 5.0f;
 
         public AudioSource impactSound;
 

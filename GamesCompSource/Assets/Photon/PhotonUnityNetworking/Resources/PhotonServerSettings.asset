@@ -53,5 +53,7 @@ MonoBehaviour:
   - isShooting
   - parentShoot
   - ShootPortal
+  - DestroyPortal1
+  - DestroyPortal2
   DisableAutoOpenWizard: 1
   ShowSettings: 0
