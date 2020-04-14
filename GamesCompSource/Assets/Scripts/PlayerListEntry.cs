@@ -27,6 +27,8 @@ namespace Com.NUIGalway.CompGame
             PlayerNumbering.OnPlayerNumberingChanged += OnPlayerNumberingChanged;
         }
 
+
+
         public void Start()
         {
             if (PhotonNetwork.LocalPlayer.ActorNumber != ownerId)

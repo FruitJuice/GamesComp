@@ -211,6 +211,16 @@ namespace Com.NUIGalway.CompGame
             SetActivePanel(SelectionPanel.name);
         }
 
+        public void OnCreateRoomOptionsButtonClicked()
+        {
+            if (!PhotonNetwork.InLobby)
+            {
+                PhotonNetwork.JoinLobby();
+            }
+
+            SetActivePanel(CreateRoomPanel.name);
+        }
+
         public void OnCreateRoomButtonClicked()
         {
             string roomName = RoomNameInputField.text;
@@ -342,12 +352,10 @@ namespace Com.NUIGalway.CompGame
                     continue;
                 }
 
-                // Update cached room info
                 if (cachedRoomList.ContainsKey(info.Name))
                 {
                     cachedRoomList[info.Name] = info;
                 }
-                // Add new room info to cache
                 else
                 {
                     cachedRoomList.Add(info.Name, info);

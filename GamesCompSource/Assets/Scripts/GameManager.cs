@@ -87,7 +87,7 @@ namespace Com.NUIGalaway.CompGame
 
         void SpawnPlayer()
         {
-            if (PlayerManager.localPlayerInstance == null) //only instantiate player if they don't already exist
+            if (PlayerManager.localPlayerInstance == null)
             {
                 int index = Random.Range(0, spawnpoints.Length);
                 PhotonNetwork.Instantiate(this.playerFab.name, spawnpoints[index], Quaternion.identity, 0);

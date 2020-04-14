@@ -101,17 +101,19 @@ namespace Com.NUIGalway.CompGame
 
             if (grenadeTele)
             {
-                Vector3 localDirection = grenadeTempPortalHit.transform.InverseTransformDirection(grenadeTemp.transform.GetComponent<Rigidbody>().velocity.normalized);
+
+                Vector3 localDirection = grenadeTempPortalHit.transform.InverseTransformDirection(grenadeTemp.transform.GetComponent<Rigidbody>().velocity);
                 //localDirection.z *= -1;
-                localDirection.x *= -1;
+                //localDirection.x *= -1;
                 Vector3 transformedDirection = grenadeTempPortalOpposite.transform.TransformDirection(localDirection);
-                grenadeTemp.transform.GetComponent<Rigidbody>().velocity = transformedDirection * grenadeTemp.transform.GetComponent<Rigidbody>().velocity.magnitude;
+                grenadeTemp.transform.GetComponent<Rigidbody>().velocity = transformedDirection;// * grenadeTemp.transform.GetComponent<Rigidbody>().velocity.magnitude;
 
 
                 Vector3 localPosition = grenadeTempPortalHit.transform.InverseTransformPoint(grenadeHitPoint);
                 localPosition.x *= -1;
+                localPosition.z = 0.1f;
                 Vector3 newPosition = grenadeTempPortalOpposite.transform.TransformPoint(localPosition);
-                newPosition += (grenadeTempPortalOpposite.transform.forward * 0.2f);
+                //newPosition += (grenadeTempPortalOpposite.transform.forward * 0.2f);
 
                 grenadeTemp.transform.position = newPosition;
                 grenadeTemp.GetComponent<TrailRenderer>().Clear();
@@ -139,9 +141,9 @@ namespace Com.NUIGalway.CompGame
         {
             if (!VisibleFromCamera(mainPortal.GetComponent<MeshRenderer>(), cameraMain))
             {
-                if (otherCamTex != null)
+                if (otherCam.targetTexture != null)
                 {
-                    otherCamTex.Release();
+                    otherCam.targetTexture.Release();
                     otherCam.enabled = false;
                 }
                 return;
@@ -195,9 +197,9 @@ namespace Com.NUIGalway.CompGame
 
         void CreateRenderTexture(RenderTexture portalRender, Camera sourceCam, Transform target, Color borderColor)
         {
-            if (portalRender != null)
+            if (sourceCam.targetTexture != null)
             {
-                portalRender.Release();
+                sourceCam.targetTexture.Release();
             }
             portalRender = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGBHalf);
             portalRender.useMipMap = true;
@@ -260,9 +262,12 @@ namespace Com.NUIGalway.CompGame
                 localDirection.x *= -1;
                 Vector3 transformedDirection = tempPortalOpposite.transform.TransformDirection(localDirection);
 
+
                 Vector3 localPosition = tempPortalHit.transform.InverseTransformPoint(hitPoint);
                 localPosition.x *= -1;
+                localPosition.z = 0.1f;
                 Vector3 rayPosition = tempPortalOpposite.transform.TransformPoint(localPosition);
+                
 
                 Debug.DrawRay(rayPosition, transformedDirection, Color.green, 4);
 

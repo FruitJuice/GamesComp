@@ -106,7 +106,7 @@ namespace Com.NUIGalway.CompGame
             animator.SetFloat("Horizontal", x);
             animator.SetFloat("Vertical", z);
 
-            if (x != 0 || z != 0 && !cursorLocked)
+            if ((x != 0 || z != 0) && cursorLocked)
             {
                 fpvAnimator.SetBool("Walk", true);
                 photonView.RPC("IsRunning", RpcTarget.All, true);

@@ -157,7 +157,7 @@ namespace Com.NUIGalway.CompGame
             }
 
 
-            if (Input.GetKeyDown(KeyCode.O) && !isAiming && !isReloading)
+            if (Input.GetKeyDown(KeyCode.Q) && !isAiming && !isReloading)
             {
                 RaycastHit hit = new RaycastHit();
                 
@@ -167,11 +167,15 @@ namespace Com.NUIGalway.CompGame
                     {
                         myView.RPC("ShootPortal1", RpcTarget.All, hit.point + (hit.transform.forward*0.01f) - hit.transform.up.normalized, hit.transform.rotation);
                     }
+                    else
+                    {
+                        myView.RPC("DestroyPortal1", RpcTarget.All);
+                    }
                 }
 
             }
 
-            if (Input.GetKeyDown(KeyCode.I) && !isAiming && !isReloading)
+            if (Input.GetKeyDown(KeyCode.E) && !isAiming && !isReloading)
             {
                 RaycastHit hit = new RaycastHit();
 
@@ -181,18 +185,14 @@ namespace Com.NUIGalway.CompGame
                     {
                         myView.RPC("ShootPortal2", RpcTarget.All, hit.point + (hit.transform.forward*0.01f) - hit.transform.up.normalized, hit.transform.rotation);
                     }
+                    else
+                    {
+                        myView.RPC("DestroyPortal2", RpcTarget.All);
+                    }
                 }
 
             }
 
-            if (Input.GetKeyDown(KeyCode.K))
-            {
-                myView.RPC("DestroyPortal1", RpcTarget.All);
-            }
-            if (Input.GetKeyDown(KeyCode.J))
-            {
-                myView.RPC("DestroyPortal2", RpcTarget.All);
-            }
 
         }
 
@@ -268,7 +268,12 @@ namespace Com.NUIGalway.CompGame
         {
             animator.Play("GrenadeThrow", 0);
             parentAnimator.SetTrigger("ThrowGrenade");
+
+
+
             GetComponent<PhotonView>().RPC("ThrowGrenade", RpcTarget.All);
+
+
         }
 
         #endregion

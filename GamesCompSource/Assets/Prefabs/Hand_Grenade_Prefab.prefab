@@ -227,7 +227,7 @@ MonoBehaviour:
   max: 2000
   explosionPrefab: {fileID: 1427962332153456, guid: 301583a5af63a494298d60cd9f296909,
     type: 3}
-  radius: 5
+  radius: 2.5
   impactSound: {fileID: 156270272482053806}
 --- !u!96 &7849040866947004541
 TrailRenderer:

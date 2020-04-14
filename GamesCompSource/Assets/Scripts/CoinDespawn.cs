@@ -14,5 +14,10 @@ namespace Com.NUIGalway.CompGame
                 PhotonNetwork.Destroy(this.photonView);
             }
         }
+
+        private void OnCollisionEnter(Collision collision)
+        {
+            if(collision.collider.CompareTag("Player")) GetComponent<BoxCollider>().enabled = false;
+        }
     }
 }
